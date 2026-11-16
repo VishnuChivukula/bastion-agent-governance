@@ -8,7 +8,7 @@
 | S0 Bootstrap | ☑ | see `git log` (`chore: bootstrap`) | uv project, config, LLM replay/record/live client, CI, ADR-001..006, VERIFY register |
 | S1 Gateway + audit | ☑ | see `git log` (`feat: gateway core`) | policy engine, AST conditions, arg hardening, Presidio redaction + DLP, tool budgets, MCP proxy over streamable HTTP, hash-chained audit + verify; pytest covers RT-04..RT-12, RT-17..RT-20, RT-23..RT-25 and the gateway half of RT-01..RT-03 (their incident half is S3); 266 tests, 98% coverage, overhead p95 ≈ 23 ms |
 | S2 Demo agent + replay | ☐ | | |
-| S3 Oversight | ☐ | | |
+| S3 Oversight | ◐ | see `git log` (`feat: oversight`) | core done and unit-tested ahead of S2 (RT-13..RT-16, RT-20..RT-22, UC-04/05/07 at gateway level): args-bound single-use grants, TTL, revoke, kill switch (agent + global), incident rules + lifecycle, model token/cost budgets. Remaining: end-to-end UC-04..UC-07 through the agent in replay (lands with S2). |
 | S4 API + console | ☐ | | |
 | S8 Package + deploy | ☐ | | |
 | S9a Ship-now polish | ☐ | | |
@@ -18,7 +18,7 @@
 | S9b Showcase | ☐ | | |
 
 ## Next exact step
-S2: add deps (`langgraph`, `langgraph-checkpoint-sqlite`); build `demo/loan_ops_agent/graph.py` (LangGraph agent, MCP client to the gateway with bearer token + `X-Bastion-Run`, SQLite checkpointer, `interrupt()` on `PENDING_APPROVAL`), `scenarios.py` for UC-02..UC-07, `run.py`; wire audit/usage `CallHook` into `GovernedAnthropic`; `make record` (key is set), then `make demo` in replay printing a decision timeline per scenario. Read the Claude tool-use reference before writing the agent loop (no `temperature`, no forced `tool_choice`, pass thinking blocks back unchanged).
+S2 (+ S3 end-to-end): build `demo/loan_ops_agent/` — `tools.py` (the agent's own tool manifest, all five tools), `graph.py` (LangGraph: `model` node → `tools` node → `await_approval` node using `interrupt()`; AsyncSqliteSaver; MCP streamable-HTTP client to the gateway with bearer token + `X-Bastion-Run`; `GovernedAnthropic` with `GovernanceHook`), `scenarios.py` (UC-02..UC-07; UC-05 swap and UC-07 kill are driven by the scenario script), `run.py` (starts the gateway on a local port, runs scenarios, prints a decision timeline from the audit log). Then `make record` (key is set) and `make demo` in replay. Claude API notes: no `temperature`, no forced `tool_choice`, pass assistant content (incl. thinking blocks) back unchanged, return all tool results in one user message.
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -39,6 +39,9 @@ S2: add deps (`langgraph`, `langgraph-checkpoint-sqlite`); build `demo/loan_ops_
 - 2026-11-16 — Rejected arguments are audited by field name only; valid arguments are audited with PII masked — the audit log must not become a PII store.
 - 2026-11-16 — Added an e-mail pattern recogniser alongside Presidio's — Presidio's own recogniser misses reserved test domains such as `@bank.example`.
 - 2026-11-16 — `pending approval` rows are created in S1; decisions, grants, expiry and revocation follow in S3.
+- 2026-11-16 — S3's oversight core was built before the S2 agent — model fixtures depend on tool results, and the kill switch and grants change those results, so recording once after oversight avoids re-recording.
+- 2026-11-16 — Kill-switch denials are not counted by incident rules and a killed agent still authenticates — its calls are denied and audited rather than vanishing as 401s, without piling up duplicate incidents.
+- 2026-11-16 — CI failure on the S1 commit: `data/` in `.gitignore` also matched `demo/data/`, so the generator was never committed. Fixed by anchoring the rule to `/data/`.
 
 ## Human actions needed
 - None now. Later: Railway deploy after S8 (`kit-local/START_HERE.md` step 7); review `docs/VERIFY.md`.
@@ -46,7 +49,7 @@ S2: add deps (`langgraph`, `langgraph-checkpoint-sqlite`); build `demo/loan_ops_
 ## Deferred / known gaps
 - Makefile targets `demo`, `record`, `eval`, `evidence`, `gif`, `serve`, `up` print "not yet: Sx" until their slice lands.
 - The LLM client has the hook interface but no budget / kill-switch / audit hooks yet (S2, S3).
-- Kill switch, incidents, approval decisions/grants and model-token budgets are not implemented yet (S3). Incident rules in the policy are parsed and validated but nothing opens incidents yet.
+- "Active runs halted" marks run rows as `halted` and denies further calls; stopping a LangGraph run in flight is handled by the agent runner (S2).
 - Audit verification cannot detect deletion of the newest events (no external anchor for the chain head); noted in ADR-005.
 - `config/settings.example.yaml` from ARCHITECTURE §3 is not created: `.env.example` already documents every setting.
 

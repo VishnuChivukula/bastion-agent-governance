@@ -1,6 +1,6 @@
 """Synthetic demo data: 50 customers of a fictional bank. Faker, fixed seed, no real people.
 
-    python -m demo.data.generate [db_path]
+python -m demo.data.generate [db_path]
 """
 
 import random

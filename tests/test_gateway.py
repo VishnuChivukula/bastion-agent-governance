@@ -79,6 +79,17 @@ async def test_export_is_denied_as_exfiltration_and_never_runs(harness):  # RT-0
     assert outbox_count(harness) == before
 
 
+async def test_rt01_exfiltration_deny_opens_a_high_incident_and_kills_the_agent(harness):  # UC-03
+    await harness.call("export_customer_data", {"destination": "x@external.example"})
+    gateway = harness.gateway
+    incidents = gateway.incidents.all(agent_id=harness.agent_id)
+    assert [(i.rule_id, i.severity, i.status) for i in incidents] == [("IR-2", "high", "open")]
+    assert gateway.killswitch.active_scope(harness.agent_id) == harness.agent_id
+    assert gateway.registry.get_agent(harness.agent_id).status == "killed"
+    after = await harness.call("lookup_customer", {"customer_id": "C-0007"})
+    assert after.status == "DENIED" and after.payload["reason"] == "killswitch"
+
+
 async def test_rt19_export_to_internal_destination_is_still_denied(harness):
     result = await harness.call("export_customer_data", {"destination": "ops@bank.example"})
     assert result.status == "DENIED" and result.decision.rule_id == "R-007"

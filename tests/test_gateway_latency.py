@@ -12,7 +12,7 @@ async def test_gateway_overhead_p95_is_under_50_ms(harness):
     calls = [
         ("lookup_customer", {"customer_id": "C-0007"}),
         ("get_customer_notes", {"customer_id": "C-0013"}),
-        ("export_customer_data", {"destination": "x@external.example"}),
+        ("delete_customer", {"customer_id": "C-0007"}),  # default deny
         ("send_email", {"to": "ops@bank.example", "subject": "Review", "body": "C-0007 done."}),
     ]
     await harness.gateway.list_tools(harness.agent_id)  # one-off: start the tools server

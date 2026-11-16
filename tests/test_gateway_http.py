@@ -72,6 +72,15 @@ async def test_hidden_tool_called_directly_is_denied(served):
     assert result.is_error
     assert result.structured_content["status"] == "DENIED"
     assert result.structured_content["rule_id"] == "R-007"
+    # IR-2 (exfiltration) opened an incident and tripped the kill switch for this agent
+    gateway = served["gateway"]
+    assert gateway.killswitch.active_scope(DEMO_AGENT_ID) == DEMO_AGENT_ID
+    async with connect(served) as client:
+        blocked = await client.call_tool("lookup_customer", {"customer_id": "C-0007"})
+    assert blocked.structured_content["reason"] == "killswitch"
+    gateway.killswitch.reactivate(DEMO_AGENT_ID, reason="test: reviewed", actor="approver")
+    async with connect(served) as client:
+        assert not (await client.call_tool("lookup_customer", {"customer_id": "C-0007"})).is_error
 
 
 async def test_approval_gated_call_returns_pending(served):

@@ -29,7 +29,9 @@ from bastion.gateway.normalize import (
 )
 from bastion.gateway.policy_engine import Decision, Downstream, Policy, PolicyLoadError
 from bastion.gateway.redaction import SUPPORTED_ENTITIES, Redactor, get_redactor
-from bastion.oversight.approvals import ApprovalStore
+from bastion.incidents.service import IncidentService
+from bastion.oversight.approvals import ApprovalService
+from bastion.oversight.killswitch import KillSwitchService
 from bastion.registry.service import PolicyStore, Registry
 
 Status = Literal["OK", "DENIED", "PENDING_APPROVAL", "TOOL_ERROR"]
@@ -142,7 +144,9 @@ class Gateway:
         self.registry = Registry(engine, self.audit)
         self.policies = PolicyStore(engine, self.audit)
         self.budgets = BudgetTracker(engine)
-        self.approvals = ApprovalStore(engine)
+        self.approvals = ApprovalService(engine, self.audit)
+        self.incidents = IncidentService(engine, self.audit)
+        self.killswitch = KillSwitchService(engine, self.audit, self.approvals, self.incidents)
         self._redactor = redactor
         self._owns_pool = pool is None
         self.pool = pool or DownstreamPool({"BASTION_DEMO_DB": str(demo_db)} if demo_db else None)
@@ -191,11 +195,35 @@ class Gateway:
         total_ms = (time.perf_counter() - started) * 1000
         result.overhead_ms = round(max(total_ms - result.downstream_ms, 0.0), 3)
         self._audit_decision(agent_id, bucket, name, arguments, result)
+        if result.status == "DENIED" and not result.decision.reasons[-1].startswith("killswitch"):
+            self._run_incident_rules(agent_id, name, result)
         return result
+
+    def _run_incident_rules(self, agent_id: str, name: Any, result: GatewayResult) -> None:
+        try:
+            policy = self.policies.active(agent_id)
+        except PolicyLoadError:
+            policy = None
+        if policy is None:
+            return
+        trigger = f"DENY {result.decision.rule_id or result.payload['reason']} on {str(name)[:60]}"
+        for incident, action in self.incidents.evaluate_rules(
+            agent_id, policy, category=result.decision.category, trigger=trigger
+        ):
+            if action == "kill":
+                self.killswitch.kill(
+                    agent_id,
+                    reason=f"incident #{incident.id} ({incident.rule_id})",
+                    actor="bastion:incident-rule",
+                )
 
     async def _decide_and_forward(
         self, agent_id: str, name: Any, arguments: Any, bucket: str
     ) -> GatewayResult:
+        scope = self.killswitch.active_scope(agent_id)  # checked before anything else
+        if scope is not None:
+            return self._denied(Decision(effect="deny", reasons=[f"killswitch: {scope}"]))
+
         if not is_valid_tool_name(name):
             return self._denied(Decision(effect="deny", reasons=["invalid_tool_name"]))
 
@@ -256,7 +284,10 @@ class Gateway:
         if decision.effect == "deny":
             return self._denied(decision, digest)
         if decision.effect == "require_approval":
-            return self._pending(agent_id, bucket, name, args, digest, decision)
+            grant = self.approvals.consume_grant(agent_id, name, digest)
+            if grant is None:
+                return self._pending(agent_id, bucket, name, args, digest, decision)
+            decision.reasons.append(f"grant {grant.id} consumed (approved by {grant.decided_by})")
         return await self._forward(connection, name, args, digest, decision)
 
     async def _forward(
