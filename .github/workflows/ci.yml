@@ -31,3 +31,29 @@ jobs:
       - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build image
+        run: docker build -t bastion-agent-governance:ci .
+      - name: Start container (replay mode, no API key, no passcode)
+        run: docker run -d --name bastion -p 8501:8501 bastion-agent-governance:ci
+      - name: Wait until healthy
+        run: |
+          for i in $(seq 1 60); do
+            if docker exec bastion python scripts/smoke.py --health-only; then exit 0; fi
+            sleep 3
+          done
+          docker logs bastion
+          exit 1
+      - name: Console answers on the published port
+        run: curl -fsS http://localhost:8501/_stcore/health
+      - name: Governed scenario runs inside the container
+        run: docker exec bastion python scripts/smoke.py
+      - name: Container runs as non-root
+        run: test "$(docker exec bastion id -u)" != "0"
+      - name: Logs
+        if: always()
+        run: docker logs bastion | tail -50

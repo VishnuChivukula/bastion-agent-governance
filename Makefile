@@ -3,7 +3,7 @@
 AGENT ?= loan-ops-agent
 export BASTION_MODE ?= replay
 
-.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up
+.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -42,5 +42,8 @@ serve: ## Run API + console locally (console on http://localhost:8501, API docs 
 	@echo "Console: http://localhost:8501   API: http://127.0.0.1:8000/docs   (Ctrl-C stops both)"
 	@BASTION_LOCAL_DEV=1 PORT=8501 uv run honcho start
 
-up: ## Run in Docker
-	@echo "not yet: S8"
+up: ## Run in Docker (console on http://localhost:8501, API docs on http://localhost:8000/docs)
+	docker compose up --build
+
+smoke: ## Smoke-test a running instance (make serve or the container): health + UC-03 + audit
+	@uv run python scripts/smoke.py

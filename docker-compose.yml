@@ -1,0 +1,21 @@
+# `make up` — Bastion in one container. Console: http://localhost:8501 · API docs: http://localhost:8000/docs
+# Reference implementation; not production; not legal advice.
+services:
+  bastion:
+    build: .
+    image: bastion-agent-governance:local
+    ports:
+      - "8501:8501"
+      - "8000:8000"
+    environment:
+      BASTION_MODE: ${BASTION_MODE:-replay}
+      # Without a passcode the deployment is read-only apart from the recorded scenarios.
+      BASTION_PASSCODE: ${BASTION_PASSCODE:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      BASTION_API_BIND: 0.0.0.0
+    volumes:
+      - bastion-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  bastion-data:
