@@ -1,0 +1,47 @@
+# VERIFY register
+
+Every regulatory reference in this repository carries a `[VERIFY]` marker and has a row here (see `docs/GOVERNANCE_MAPPING.md`, "The VERIFY rule"). References are paraphrased starting points written by an AI assistant. **Each stays `unverified` until the repository owner has checked it against the primary source** and flipped it to `verified` or corrected it.
+
+Bastion supports evidence for obligations; it does not make a system compliant. Reference implementation; not production; not legal advice.
+
+## Regulatory references
+
+| # | File | Reference | Claim made | Status |
+|---|---|---|---|---|
+| 1 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 6 and Annex III | Basis for classifying a system as high-risk; registry and classification support evidence here | unverified |
+| 2 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 5 | Prohibited practices; a `prohibited` tier blocks registration | unverified |
+| 3 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 9 | Risk management system; policy-as-code, default deny and versioning support evidence | unverified |
+| 4 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 12 | Record-keeping / logging; hash-chained audit log supports evidence | unverified |
+| 5 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 26 | Deployer duties incl. log retention and human oversight | unverified |
+| 6 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 14 | Human oversight incl. ability to intervene or stop; approvals and kill switch support evidence | unverified |
+| 7 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 10 | Data governance; relevance to deployers is limited | unverified |
+| 8 | docs/GOVERNANCE_MAPPING.md | GDPR Art. 5(1)(c) | Data minimisation; PII redaction supports evidence | unverified |
+| 9 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 15 | Accuracy, robustness, cybersecurity; red-team suite and CI gate support evidence | unverified |
+| 10 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 72 | Post-market monitoring; incident lifecycle supports evidence | unverified |
+| 11 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 73 | Serious incident reporting (provider-side) | unverified |
+| 12 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 13 | Information to deployers; agent card supports evidence | unverified |
+| 13 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 50 | Transparency for certain AI systems | unverified |
+| 14 | docs/GOVERNANCE_MAPPING.md | EU AI Act Art. 11 and Annex IV | Technical documentation; evidence pack gives partial support only | unverified |
+| 15 | docs/GOVERNANCE_MAPPING.md | EU AI Act provider vs deployer roles | A bank using a third-party agent is typically a deployer | unverified |
+| 16 | docs/GOVERNANCE_MAPPING.md | NIST AI RMF functions GOVERN / MAP / MEASURE / MANAGE | Function-level mapping of each capability (see table) | unverified |
+| 17 | docs/GOVERNANCE_MAPPING.md | NIST AI 600-1 (Generative AI Profile) | Covers prompt injection and information security risks | unverified |
+| 18 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 6.1 | Actions to address risks and opportunities | unverified |
+| 19 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 7.4 | Communication | unverified |
+| 20 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 7.5 | Documented information | unverified |
+| 21 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 8.1 | Operational planning and control | unverified |
+| 22 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 8.2 | AI risk assessment | unverified |
+| 23 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 8.3 | AI risk treatment | unverified |
+| 24 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 8.4 | AI system impact assessment | unverified |
+| 25 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 9.1 | Monitoring, measurement, analysis and evaluation | unverified |
+| 26 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 10.2 | Nonconformity and corrective action | unverified |
+| 27 | docs/GOVERNANCE_MAPPING.md | DORA | ICT logging and ICT incident management expectations (optional mention) | unverified |
+| 28 | docs/USE_CASES.md (UC-01), docs/SPEC.md | EU AI Act Annex III | A credit-related agent (creditworthiness / credit limits) falls under a high-risk use case | unverified |
+| 29 | docs/EVALS.md (Suite C) | EU AI Act Art. 5, Art. 6, Annex III, Art. 50 | Gold tiers for the 12 synthetic agent cards | unverified |
+
+No ISO/IEC 42001 Annex A control identifiers are cited anywhere in this repository; references are at clause level only.
+
+## Non-regulatory items to verify
+
+| # | File | Item | Claim made | Status |
+|---|---|---|---|---|
+| P1 | config/prices.yaml | Model prices | `claude-haiku-5-5` $0.10 / $0.50 and `claude-sonnet-5-5` $2.00 / $10.00 per million input / output tokens | unverified |

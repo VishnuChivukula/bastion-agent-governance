@@ -1,0 +1,62 @@
+# Bastion Kit · policies/loan-ops-agent.yaml
+# Seed policy for the demo Loan Ops Agent. Rules are ordered; first match wins; no match => deny.
+
+agent: loan-ops-agent
+version_note: "initial policy (seed from kit)"
+
+downstream:
+  - name: loan-tools
+    command: ["python", "-m", "demo.tools_server"]
+
+budgets:
+  max_tool_calls_per_session: 30
+  max_tokens_per_session: 200000
+  max_cost_usd_per_day: 5.0
+
+incident_rules:
+  - id: IR-1
+    when: "deny_count_10m >= 3"
+    severity: medium
+  - id: IR-2
+    when: "category == 'exfiltration'"
+    severity: high
+    on_incident: kill
+
+rules:
+  - id: R-001
+    tool: lookup_customer
+    effect: allow
+    redact_output: [EMAIL_ADDRESS, PHONE_NUMBER, IBAN_CODE]
+
+  - id: R-002
+    tool: get_customer_notes
+    effect: allow
+    redact_output: [EMAIL_ADDRESS, PHONE_NUMBER]
+
+  - id: R-003
+    tool: update_credit_limit
+    effect: require_approval
+    when: "args.new_limit > 50000 or pct_change(args.current_limit, args.new_limit) > 20"
+
+  - id: R-004
+    tool: update_credit_limit
+    effect: allow
+
+  - id: R-005
+    tool: send_email
+    effect: allow
+    when: "endswith(args.to, '@bank.example')"
+    scan_input:
+      entities: [IBAN_CODE, CREDIT_CARD]
+      action: require_approval
+
+  - id: R-006
+    tool: send_email
+    effect: require_approval
+
+  - id: R-007
+    tool: export_customer_data
+    effect: deny
+    category: exfiltration
+
+# policies/loan-ops-agent.yaml · Page 1 of 1

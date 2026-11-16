@@ -1,0 +1,30 @@
+# secrets and local-only material
+.env
+.env.*
+!.env.example
+kit-local/
+.claude/settings.local.json
+
+# runtime data
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

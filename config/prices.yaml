@@ -1,0 +1,10 @@
+# Model prices in USD per million tokens, used for budget enforcement and usage reporting.
+# [VERIFY] Check against https://docs.claude.com (pricing page) before relying on cost figures.
+# Tracked in docs/VERIFY.md. Last reviewed: 2026-11-16 (from SDK reference notes, not the live page).
+models:
+  claude-haiku-5-5:
+    input_per_mtok: 0.10
+    output_per_mtok: 0.50
+  claude-sonnet-5-5:
+    input_per_mtok: 2.00
+    output_per_mtok: 10.00
