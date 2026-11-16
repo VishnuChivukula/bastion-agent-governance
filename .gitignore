@@ -5,8 +5,8 @@
 kit-local/
 .claude/settings.local.json
 
-# runtime data
-data/
+# runtime data (repo root only; demo/data/ is source code)
+/data/
 *.db
 *.db-shm
 *.db-wal
