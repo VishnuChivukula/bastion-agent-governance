@@ -24,12 +24,12 @@ Prerequisites: `git`, `make` and [uv](https://docs.astral.sh/uv/). No API key is
 ```bash
 git clone https://github.com/VishnuChivukula/bastion-agent-governance.git
 cd bastion-agent-governance
-make setup   # install dependencies and git hooks
+make setup   # install dependencies, git hooks and headless Chromium (used for the PDF)
 make demo    # registration plus six governed scenarios in the terminal, replay mode, no key
 make serve   # console at http://localhost:8501, API docs at http://127.0.0.1:8000/docs
 make eval    # red-team, benign and assessor suites with the CI thresholds
 make evidence  # evidence pack (HTML + PDF) for the demo agent, written to data/evidence/
-make up      # the same stack in Docker
+make up      # the same stack in Docker (needs Docker)
 ```
 
 Under `make serve` the local passcode is `bastion-local`; it is accepted only in that mode. Without a passcode, mutating actions are refused.
@@ -50,7 +50,7 @@ The image runs the console on the public port and keeps the API and gateway on l
 Notes for the free plan:
 
 - **Cold start.** The service sleeps after 15 minutes without traffic. The next visit waits for the container to start, typically around a minute on 0.1 CPU, and the first scenario after that is slower than later ones.
-- **Low-memory profile.** `BASTION_LOW_MEMORY=true` keeps the whole container under about 450 MB: PII masking uses a built-in pattern engine instead of Presidio and spaCy (same four entity types, verified equal on the demo data), and the evidence pack is HTML only because no headless browser is started. CI runs the image under a 512 MB limit and fails if it is killed. Details: [ADR-010](docs/adr/ADR-010-low-memory-mode.md).
+- **Low-memory profile.** `BASTION_LOW_MEMORY=true` keeps the whole container well inside 512 MB (CI measures a peak of about 276 MB and fails above 450 MB): PII masking uses a built-in pattern engine instead of Presidio and spaCy (same four entity types, verified equal on the demo data), and the evidence pack is HTML only because no headless browser is started. CI runs the image under a 512 MB limit and fails if it is killed. Details: [ADR-010](docs/adr/ADR-010-low-memory-mode.md).
 - **Nothing persists.** The disk is ephemeral: every start re-seeds the demo agent and the synthetic data.
 
 ## What you will see

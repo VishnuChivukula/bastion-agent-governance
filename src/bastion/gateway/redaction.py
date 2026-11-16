@@ -118,8 +118,17 @@ _CARD = re.compile(
     r"[- ]?\d{3,4}[- ]?\d{3,4}[- ]?\d{3,5}\b"
 )
 # IBAN-like: country, two check digits, then 11 to 30 characters, optionally in groups.
-_IBAN = re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]){11,30}\b")
+_IBAN = re.compile(r"\b[A-Za-z]{2}\d{2}(?:[ ]?[A-Za-z0-9]){11,30}\b")
 _PHONE_REGIONS = ("US", "GB", "DE", "FR", "IL", "IN", "CA", "BR")
+
+
+# IBAN length by country (ISO 13616 registry), for the countries this demo is likely to meet.
+IBAN_LENGTHS = {
+    "AT": 20, "BE": 16, "BG": 22, "CH": 21, "CY": 28, "CZ": 24, "DE": 22, "DK": 18, "EE": 20,
+    "ES": 24, "FI": 18, "FR": 27, "GB": 22, "GR": 27, "HR": 21, "HU": 28, "IE": 22, "IS": 26,
+    "IT": 27, "LI": 21, "LT": 20, "LU": 20, "LV": 21, "MT": 31, "NL": 18, "NO": 15, "PL": 28,
+    "PT": 25, "RO": 24, "SE": 24, "SI": 19, "SK": 24,
+}  # fmt: skip
 
 
 def luhn_valid(digits: str) -> bool:
@@ -155,14 +164,21 @@ class LightRedactor(BaseRedactor):
     def _ibans(self, text: str) -> list[tuple[float, int, int, str]]:
         found = []
         for match in _IBAN.finditer(text):
-            # The pattern can run on into following upper-case words or digits. Shorten the
-            # candidate from the right, at character boundaries, until the checksum holds.
+            # The pattern can run on into following words or digits. Shorten the candidate
+            # from the right until it is a well-formed IBAN that ends at a word boundary.
             raw = match.group()
+            expected = IBAN_LENGTHS.get(raw[:2].upper())
             for end in range(len(raw), 14, -1):
                 piece = raw[:end]
-                if piece.endswith(" "):
+                following = text[match.start() + end : match.start() + end + 1]
+                if piece.endswith(" ") or following.isalnum():
                     continue
-                if iban_valid(piece.replace(" ", "")):
+                compact = piece.replace(" ", "").upper()
+                if expected is not None and len(compact) != expected:
+                    continue  # a chance checksum match of the wrong length is not an IBAN
+                if expected is None and end != len(raw):
+                    continue  # unknown country: accept only the whole candidate
+                if iban_valid(compact):
                     found.append((1.0, match.start(), match.start() + end, "IBAN_CODE"))
                     break
         return found

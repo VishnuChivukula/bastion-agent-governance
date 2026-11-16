@@ -238,3 +238,25 @@ def test_knowledge_notes_carry_verify_markers_and_no_bare_references():
     for path in (REPO_ROOT / "knowledge").glob("eu-ai-act-*.md"):
         text = path.read_text(encoding="utf-8")
         assert "[VERIFY]" in text and "not the legal text" in text, path.name
+
+
+@pytest.mark.parametrize("reserved", ["global", "unbound"])
+def test_reserved_names_cannot_be_agent_ids(engine, reserved):
+    """`global` is the kill-switch scope for every agent: an agent must never own that name."""
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="reserved"):
+        card(reserved)
+    svc = service(engine)
+    with pytest.raises(RegistryError, match="reserved"):
+        svc.registry.create_agent(reserved, name="x", owner="o@bank.example")
+
+
+def test_sign_off_is_claimed_once(engine):
+    svc = service(engine, assessment("limited"), review("agree", "limited"))
+    svc.register(card(), actor="owner@bank.example")
+    svc.sign_off("test-agent", tier="limited", approver="a@bank.example")
+    with pytest.raises(RegistryError):
+        svc.sign_off("test-agent", tier="prohibited", approver="b@bank.example")
+    agent = svc.registry.get_agent("test-agent")
+    assert agent.status == "active" and agent.tier == "limited"

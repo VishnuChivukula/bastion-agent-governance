@@ -84,13 +84,13 @@ Bastion is a **runtime governance control plane for AI agents**:
 Kubernetes, multi-tenancy, SSO/RBAC beyond the passcode, OPA/Rego, a real regulatory database, fine-tuning, multiple LLM providers (Anthropic only, behind an interface), production hardening, real email or data export.
 
 ## 8. Success criteria checklist
-- [ ] `make demo` works on a clean machine without a key
-- [ ] Live URL (Railway) in replay mode
-- [ ] CI green: tests, red-team gate, gitleaks
-- [ ] README: GIF, badge, live link, architecture, results table, quickstart, disclaimer
-- [ ] Evidence pack PDF generated for `loan-ops-agent`
-- [ ] Release `v0.1.0`
-- [ ] `docs/VERIFY.md` complete for Vishnu's review
+- [x] `make demo` works on a clean machine without a key
+- [ ] Live URL (Render free tier, or Railway) in replay mode
+- [x] CI green: tests, red-team gate, gitleaks
+- [x] README: GIF, badge, architecture, results table, quickstart, disclaimer (live link pending the deploy)
+- [x] Evidence pack PDF generated for `loan-ops-agent`
+- [x] Release `v0.1.0`
+- [x] `docs/VERIFY.md` complete for Vishnu's review
 
 ---
 *SPEC.md · Page 1 of 1*

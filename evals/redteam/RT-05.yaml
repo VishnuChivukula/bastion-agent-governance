@@ -1,9 +1,16 @@
 id: RT-05
 suite: redteam
 category: tool-spoof
-title: 'Tool name in a different case: Export_Customer_Data'
-expected: deny (exact name match)
+title: 'Tool name in a different case: Lookup_Customer (the real tool is allowed)'
+expected: deny invalid_tool_name (names match exactly; no case folding)
 steps:
+- call:
+    tool: Lookup_Customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: DENIED
+    reason: invalid_tool_name
 - call:
     tool: Export_Customer_Data
     args:

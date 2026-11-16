@@ -16,10 +16,19 @@
 | S5 Registry + assessor | ☑ | see `git log` (`feat: registry classification`) | agent card model, `knowledge/` notes (`[VERIFY]`), Assessor → Reviewer → revise-once graph with JSON-schema structured output, durable sign-off (override needs a reason, `prohibited` blocks, tier template or agent-specific policy, token once), API routes, console Registry page, 12 synthetic cards + 3 seeded errors recorded (28 fixtures); UC-01 passes in replay and opens `make demo`; assessor suite: 12/12 tiers, 3/3 seeded errors caught; 375 tests |
 | S6 Evals + CI gate | ☑ | see `git log` (`feat: eval suites`) | 25 red-team + 15 benign YAML scenarios with a step interpreter (`evals/scenario.py`), assessor suite, `evals/run.py` with thresholds and `latest.json`, README table updater, `make eval`, CI `eval` job (thresholds + README freshness), `/evals/latest` and the console Red-Team page; gate: 25/25, 15/15, 12/12, 3/3, p95 ≈ 9 ms; 385 tests |
 | S7 Evidence pack | ☑ | see `git log` (`feat: evidence pack`) | `evidence/generator.py` collects from the live DB (card, classification and sign-off, policy and hash, oversight, robustness, incidents, usage, audit integrity, framework mapping filtered to evidence present, limitations); Jinja2 HTML; Chromium PDF with the document name in the header and `Page X of Y` in the footer; API (`/agents/{id}/evidence`, `.html`, `.pdf`), console Evidence page, `make evidence`, `make evidence-sample`; sample committed in `docs/samples/`; UC-09 passes; 398 tests |
-| S9b Showcase | ☐ | | |
+| S9b Showcase | ☑ | see `git log` (`docs: demo GIF`, `fix: final review`), tag `v0.2.0` | `make gif` → `docs/assets/demo.gif` in the README; `DEMO_SCRIPT.md`, `THREAT_MODEL.md`, `SHOWCASE.md` (doc-writer, facts and `[VERIFY]` markers checked); VERIFY register consolidated with review instructions; final reviewer pass: no P0, P1 and P2 findings fixed; 421 tests; release v0.2.0 |
 
 ## Next exact step
-S9b: `scripts/make_gif.py` + `make gif` → `docs/assets/demo.gif` in the README; `docs/DEMO_SCRIPT.md`, `docs/THREAT_MODEL.md`, `docs/SHOWCASE.md` (doc-writer); consolidate `docs/VERIFY.md`; reviewer on the whole repo, fix findings; tick the SPEC §8 checklist here; `gh release create v0.2.0 --generate-notes`.
+All slices are done. Open items are human-only: deploy on Render and paste the URL with `prompts/DEPLOY_DONE.md` (adds the live link and badge to the README); review `docs/VERIFY.md`. After that, see the README roadmap for candidate work.
+
+## SPEC §8 success criteria
+- [x] `make demo` works on a clean machine without a key — verified from a fresh clone (S9a) and by the reviewer with the key unset
+- [ ] Live URL in replay mode — **needs the owner**: Render blueprint is ready (`render.yaml`), CI proves the image runs within 512 MB
+- [x] CI green: tests, red-team gate, gitleaks — plus the container build and the 512 MB run
+- [x] README: GIF, badge, architecture, results table, quickstart, disclaimer — the live link is a placeholder until the deploy
+- [x] Evidence pack PDF generated for `loan-ops-agent` — `docs/samples/evidence-pack-loan-ops-agent.pdf`
+- [x] Release `v0.1.0` (and `v0.2.0`)
+- [x] `docs/VERIFY.md` complete for Vishnu's review — 39 regulatory rows, a list of statements that need particular care, and the price table
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -76,14 +85,16 @@ S9b: `scripts/make_gif.py` + `make gif` → `docs/assets/demo.gif` in the README
 - 2026-11-17 — The CI memory check drives the console from a browser on the runner, outside the container's cgroup — a health check alone never opens a console session, which is when the console's memory actually grows.
 - 2026-11-17 — Deep links to a console page on a freshly started server briefly show Streamlit's "Page not found" notice (pages register on the first session); the walk-through therefore navigates through the sidebar like a visitor.
 - 2026-11-17 — S9b: the GIF is recorded by `scripts/make_gif.py` against a throwaway replay instance it starts itself (11 captioned frames, about 700 kB), so it can be regenerated after any console change. The README roadmap now lists only work that is not built.
+- 2026-11-17 — Final reviewer pass (whole repo): no P0. Fixed: version bumped to 0.2.0 everywhere it is printed; `global` and `unbound` are reserved and cannot be agent ids (an agent named `global` would have aliased the global kill switch); sign-off is claimed with one conditional UPDATE; RT-05 now targets an allowed tool so it fails if the gateway ever case-folds; eval results record the policy hash they ran against and the evidence pack says plainly when that is not the policy in force (and drops the red-team mapping row); the light PII engine handles lower-case IBANs and checks IBAN length per country, with both review cases added to the equivalence test; hot-path lookups use a read-only scope instead of taking the write lock; statements in the knowledge notes that need particular care are listed in `docs/VERIFY.md`.
 
 ## Human actions needed
 - **Render deploy (free plan)**: dashboard.render.com → New → Blueprint → connect GitHub and pick `bastion-agent-governance` → Render reads `render.yaml` → enter a value for `BASTION_PASSCODE` when prompted → Apply. When the service is live, paste its `https://…onrender.com` URL with `prompts/DEPLOY_DONE.md`. Railway (`railway.json`) remains the paid alternative.
-- Review `docs/VERIFY.md` (after S9b consolidates it).
+- **Review `docs/VERIFY.md`**: start with the section "Points in the knowledge notes that deserve particular care", then the 39 rows and the price table.
 
 ## Deferred / known gaps
+- `evals/results/latest.json` is tracked, so `make eval` leaves a timestamp-only change in the working tree (CI checks the README table, not this file).
+- Evidence routes are open and each generation (at most one per agent per 30 s) writes an audit event carrying a self-declared actor name.
 - Reviewer P2/P3 left open: failed gateway logins (`auth_failed`) are audited one event per attempt (not throttled); a parked run whose approval expires stays `interrupted` until the next scenario run supersedes it; if a passcode holder decides a scripted run's approval in the instant before the script does, that run is marked failed.
-- Makefile targets `eval`, `evidence`, `gif`, `serve`, `up` print "not yet: Sx" until their slice lands.
 - "Active runs halted" marks run rows as `halted` and blocks the agent's next model or tool call; a run parked at an approval interrupt is not resumed.
 - Fixtures cover the six scripted scenarios only. Any change to the agent's prompts, tool manifest, policy redaction rules or demo data needs `make record` (requires a key).
 - Audit verification cannot detect deletion of the newest events (no external anchor for the chain head); noted in ADR-005.

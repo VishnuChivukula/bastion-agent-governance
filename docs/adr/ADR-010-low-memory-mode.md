@@ -17,6 +17,7 @@ The public demo has to run on a free host with 512 MB of RAM, 0.1 CPU and an eph
 
 ## Consequences
 - Measured after the change, with a browser session that visited every page, ran a scenario and generated a pack: about 260 MB resident in total (macOS; CI prints the Linux figure on every run).
+- Known differences outside the demo corpus are not ruled out. Two found in review were closed and added to the equivalence test (lower-case IBANs; an IBAN glued to following letters). Others may exist.
 - The light engine is narrower than Presidio. It covers the same four entity types by pattern and checksum and has no path to NER-based entities (names, locations) or to Presidio's wider recogniser set. Equality is proven only for the synthetic demo data and eval inputs. It is a demo-hosting profile, not a recommendation for real data.
 - A deployment in this profile cannot produce the PDF. The control it demonstrates (header with the document name, `Page X of Y`) is shown by the committed sample and by CI on the default profile.
 - On 0.1 CPU the first request after a sleep takes a while: the platform starts the container, then the first scenario loads the agent stack. The README says so.

@@ -2,11 +2,13 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Tier = Literal["prohibited", "high", "limited", "minimal"]
 TIERS: tuple[str, ...] = ("prohibited", "high", "limited", "minimal")
 Autonomy = Literal["suggest", "act_with_approval", "autonomous"]
+# "global" is the kill switch scope for all agents; "unbound" is the shared budget bucket.
+RESERVED_IDS = frozenset({"global", "unbound"})
 
 
 class AgentCard(BaseModel):
@@ -15,6 +17,14 @@ class AgentCard(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{1,62}$")
+
+    @field_validator("id")
+    @classmethod
+    def _not_reserved(cls, value: str) -> str:
+        if value in RESERVED_IDS:
+            raise ValueError(f"'{value}' is a reserved name and cannot be an agent id")
+        return value
+
     name: str = Field(min_length=1, max_length=120)
     owner: str = Field(min_length=1, max_length=200)
     business_purpose: str = Field(min_length=10, max_length=2000)

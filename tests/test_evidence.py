@@ -173,3 +173,21 @@ def test_committed_sample_is_a_real_pack():
     first = " ".join(reader.pages[0].extract_text().split())
     assert "Bastion Evidence Pack — Loan Ops Agent" in first
     assert f"Page 1 of {len(reader.pages)}" in first and DISCLAIMER in first
+
+
+def test_eval_results_for_another_policy_are_not_presented_as_evidence(engine):
+    """If the policy in force is not the one the suites ran against, the pack says so."""
+    from bastion.registry.service import PolicyStore
+    from bastion.seed import DEMO_POLICY
+
+    seed_demo(engine)
+    matching = collect(engine, AGENT)
+    assert matching.robustness["matches_policy"] is True
+    assert "redteam" in {row["key"] for row in matching.mapping}
+
+    weaker = DEMO_POLICY.read_text(encoding="utf-8").replace("> 50000", "> 5000000")
+    PolicyStore(engine).activate(AGENT, weaker, created_by="someone")
+    changed = collect(engine, AGENT)
+    assert changed.robustness["matches_policy"] is False
+    assert "redteam" not in {row["key"] for row in changed.mapping}
+    assert "NOT produced against the policy in force" in render_html(changed)

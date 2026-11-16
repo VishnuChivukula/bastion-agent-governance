@@ -11,7 +11,7 @@ import uuid
 from sqlalchemy import Engine, select, update
 
 from bastion.audit.log import AuditLog
-from bastion.db import session_scope
+from bastion.db import read_scope, session_scope
 from bastion.gateway.policy_engine import Policy, PolicyLoadError, content_hash
 from bastion.models import Agent, PolicyRow, Run, iso
 
@@ -40,6 +40,8 @@ class Registry:
         status: str = "draft",
         actor: str = "system",
     ) -> Agent:
+        if agent_id in ("global", "unbound"):  # kill-switch scope / shared budget bucket
+            raise RegistryError(f"'{agent_id}' is a reserved name and cannot be an agent id")
         with session_scope(self.engine) as session:
             if session.get(Agent, agent_id):
                 raise RegistryError(f"agent '{agent_id}' already exists")
@@ -54,11 +56,11 @@ class Registry:
         return agent
 
     def get_agent(self, agent_id: str) -> Agent | None:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return session.get(Agent, agent_id)
 
     def list_agents(self) -> list[Agent]:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return list(session.scalars(select(Agent).order_by(Agent.id)))
 
     def issue_token(self, agent_id: str, *, actor: str = "system") -> str:
@@ -84,7 +86,7 @@ class Registry:
         """
         if not token:
             return None
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             agent = session.scalar(select(Agent).where(Agent.token_hash == hash_token(token)))
             if agent is None or agent.status not in ("active", "killed"):
                 return None
@@ -126,11 +128,11 @@ class Registry:
                 run.final_text = text
 
     def get_run(self, run_id: str) -> Run | None:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return session.get(Run, run_id)
 
     def list_runs(self, limit: int = 50) -> list[Run]:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return list(session.scalars(select(Run).order_by(Run.started_at.desc()).limit(limit)))
 
     def resolve_run(self, agent_id: str, run_id: str | None) -> str:
@@ -140,7 +142,7 @@ class Registry:
         falls into one shared bucket per agent, so inventing run ids cannot reset a budget.
         """
         if run_id:
-            with session_scope(self.engine) as session:
+            with read_scope(self.engine) as session:
                 run = session.get(Run, run_id)
                 if run is not None and run.agent_id == agent_id:
                     return run_id
@@ -193,7 +195,7 @@ class PolicyStore:
         return row
 
     def active_row(self, agent_id: str) -> PolicyRow | None:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return session.scalar(
                 select(PolicyRow).where(PolicyRow.agent_id == agent_id, PolicyRow.active.is_(True))
             )
@@ -210,7 +212,7 @@ class PolicyStore:
         return self._cache[row.content_hash]
 
     def versions(self, agent_id: str) -> list[PolicyRow]:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return list(
                 session.scalars(
                     select(PolicyRow)

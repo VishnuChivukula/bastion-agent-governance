@@ -43,7 +43,7 @@ Bastion supports evidence for obligations; it does not make a system compliant. 
 | 26 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 10.2 | Nonconformity and corrective action | unverified |
 | 27 | docs/GOVERNANCE_MAPPING.md | DORA | ICT logging and ICT incident management expectations (optional mention) | unverified |
 | 28 | docs/USE_CASES.md (UC-01), docs/SPEC.md | EU AI Act Annex III | A credit-related agent (creditworthiness / credit limits) falls under a high-risk use case | unverified |
-| 30 | README.md (Governance mapping summary) | EU AI Act Art. 5, 6, Annex III, Art. 9, 11, Annex IV, Art. 13, 15, 50, 10, 12, 14, 26, 72, 73; GDPR Art. 5(1)(c); NIST AI RMF functions; ISO/IEC 42001 clauses 6.1, 7.5, 8.1, 8.2, 8.3, 9.1, 10.2; provider vs deployer | Repeats rows 3–8, 10, 11, 15, 16, 18, 20–23, 25, 26 for the capabilities built so far | unverified |
+| 30 | README.md (Governance mapping summary) | EU AI Act Art. 5, 6, Annex III, Art. 9, 11, Annex IV, Art. 13, 15, 50, 10, 12, 14, 26, 72, 73; GDPR Art. 5(1)(c); NIST AI RMF functions; ISO/IEC 42001 clauses 6.1, 7.4, 7.5, 8.1, 8.2, 8.3, 8.4, 9.1, 10.2; provider vs deployer | Repeats rows 3–8, 10, 11, 15, 16, 18, 20–23, 25, 26 for the capabilities built so far | unverified |
 | 29 | docs/EVALS.md (Suite C) | EU AI Act Art. 5, Art. 6, Annex III, Art. 50 | Gold tiers for the 12 synthetic agent cards | unverified |
 | 31 | knowledge/eu-ai-act-art5-prohibited.md | EU AI Act Art. 5 | Outline of the prohibited practices (manipulation, exploiting vulnerabilities, social scoring, crime prediction by profiling, untargeted facial scraping, emotion inference at work and in education, sensitive biometric categorisation, real-time remote biometric identification) | unverified |
 | 32 | knowledge/eu-ai-act-art6-high-risk.md | EU AI Act Art. 6 and Annex I | Two routes to high-risk; the exception for narrow procedural, preparatory and similar tasks; the exception not applying to profiling; documentation of reliance on the exception | unverified |
@@ -56,6 +56,17 @@ Bastion supports evidence for obligations; it does not make a system compliant. 
 | 39 | docs/SHOWCASE.md, docs/DEMO_SCRIPT.md | EU AI Act Art. 9, 12, 14, 15; ISO/IEC 42001 clause 8.1; DORA ICT incident management; provider vs deployer; the three frameworks by name | Talking points and narrative for bank audiences (repeats rows 3, 4, 6, 9, 15, 21, 27) | unverified |
 
 No ISO/IEC 42001 Annex A control identifiers are cited anywhere in this repository; references are at clause level only.
+
+## Points in the knowledge notes that deserve particular care
+
+These sentences steer the Assessor and Reviewer and read as settled, but are interpretive. Check them first (flagged by the final independent review, 2026-11-17):
+
+| File | Statement | Why it needs care |
+|---|---|---|
+| knowledge/eu-ai-act-art6-high-risk.md | Human review of every output does not by itself take an Annex III use out of the high-risk class | An interpretation of how the Art. 6 exception applies, not a statement in the text |
+| knowledge/eu-ai-act-annex3-use-cases.md | Credit-limit decisions about individual customers relate to creditworthiness | Decisive for UC-01's `high` tier; the Reviewer agent itself questions it in the sample pack |
+| knowledge/eu-ai-act-annex3-use-cases.md | AML and fraud alert handling is close to the fraud-detection exception and to law-enforcement-adjacent uses | Speculative; drives the two-tier gold answer for the AML card |
+| src/bastion/evidence/generator.py (`MAPPING`) | Art. 13, Art. 72 and Art. 73 are labelled provider-side | Check the provider / deployer split for each mapped article |
 
 ## Non-regulatory items to verify
 

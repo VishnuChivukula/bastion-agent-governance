@@ -2,7 +2,7 @@
 
 from sqlalchemy import Engine, func, select
 
-from bastion.db import session_scope
+from bastion.db import read_scope, session_scope
 from bastion.gateway.policy_engine import Budgets
 from bastion.models import Usage
 
@@ -12,7 +12,7 @@ class BudgetTracker:
         self.engine = engine
 
     def tool_calls(self, agent_id: str, run_id: str) -> int:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return session.scalar(
                 select(func.count())
                 .select_from(Usage)

@@ -168,7 +168,12 @@
 
 <h2>5. Robustness testing</h2>
 {% if p.robustness %}
-<p>Latest eval run: {{ p.robustness.generated_at | when }} · gate {% if p.robustness.passed %}<span class="ok">PASS</span>{% else %}<span class="bad">FAIL</span>{% endif %}. The suites run in replay mode on every commit; they test the gateway and the classification agents of this installation, not this agent's production traffic.</p>
+<p>Latest eval run available to this installation: {{ p.robustness.generated_at | when }} · gate {% if p.robustness.passed %}<span class="ok">PASS</span>{% else %}<span class="bad">FAIL</span>{% endif %}. The suites run in replay mode on every commit. They test the gateway and the classification agents against one policy, not this agent's production traffic.</p>
+{% if p.robustness.matches_policy %}
+<p>The suites ran against the policy in force for this agent (sha256 <code>{{ p.robustness.policy_hash }}</code>).</p>
+{% else %}
+<p class="bad">These results were NOT produced against the policy in force for this agent{% if p.robustness.policy_hash %} (they ran against sha256 <code>{{ p.robustness.policy_hash }}</code>){% endif %}. They show that the gateway mechanisms work; they are not evidence about this agent's current policy, and the framework mapping below omits the red-team row.</p>
+{% endif %}
 <table>
   <tr><th>Metric</th><th>Value</th><th>Threshold</th><th>Gate</th></tr>
   {% for row in p.robustness.thresholds %}

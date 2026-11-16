@@ -43,13 +43,24 @@ def make_engine(db_path: Path | str) -> Engine:
 
 
 @contextmanager
+def read_scope(engine: Engine) -> Iterator[Session]:
+    """A read-only unit of work: a deferred transaction that never takes the write lock.
+    Use it for lookups on hot paths (the gateway's per-call checks). Never write through it."""
+    session = Session(engine, expire_on_commit=False)
+    try:
+        yield session
+    finally:
+        session.close()  # ends the read transaction; loaded objects stay usable (detached)
+
+
+@contextmanager
 def session_scope(engine: Engine) -> Iterator[Session]:
     """A unit of work. It takes the SQLite write lock when it begins (BEGIN IMMEDIATE).
 
     Most units of work here read and then write. A deferred transaction that does that fails
     with "database is locked" if another connection commits in between, and SQLite's busy
     timeout does not apply to that upgrade. Taking the lock up front makes writers queue
-    (up to the 15 s timeout) instead of failing. Plain reads use `engine.connect()`.
+    (up to the 15 s timeout) instead of failing. Plain reads use `read_scope`.
     """
     session = Session(engine.execution_options(immediate=True), expire_on_commit=False)
     try:

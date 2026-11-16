@@ -7,7 +7,7 @@ submit card ─▶ draft ─▶ assessing ─▶ awaiting_signoff ─▶ active 
 from pathlib import Path
 
 from pydantic import BaseModel
-from sqlalchemy import Engine, select
+from sqlalchemy import Engine, select, update
 
 from bastion.audit.log import AuditLog
 from bastion.config import REPO_ROOT, Settings, get_settings
@@ -175,7 +175,16 @@ class ClassificationService:
                 f"overriding the proposed tier '{proposed}' with '{tier}' needs a reason"
             )
         signed_at = iso()
+        blocked = tier == "prohibited"
         with session_scope(self.engine) as session:
+            # One conditional UPDATE decides who signs: two concurrent sign-offs cannot both win.
+            claimed = session.execute(
+                update(Agent)
+                .where(Agent.id == agent_id, Agent.status == "awaiting_signoff")
+                .values(status="blocked" if blocked else "active", tier=tier)
+            )
+            if claimed.rowcount != 1:
+                raise RegistryError(f"agent '{agent_id}' is no longer awaiting sign-off")
             row = session.scalar(
                 select(AssessmentRow)
                 .where(AssessmentRow.agent_id == agent_id)
@@ -183,8 +192,6 @@ class ClassificationService:
             )
             row.final_tier, row.signed_off_by, row.signed_at = tier, approver, signed_at
             row.override_reason = reason or None
-        blocked = tier == "prohibited"
-        self._set_status(agent_id, "blocked" if blocked else "active", tier)
         self.audit.append(
             "signoff_recorded",
             actor=approver,

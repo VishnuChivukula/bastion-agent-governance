@@ -22,7 +22,9 @@ from bastion import __version__
 from bastion.audit.verify import verify_chain
 from bastion.config import REPO_ROOT, Settings, get_settings
 from bastion.gateway.mcp_proxy import DownstreamPool
+from bastion.gateway.policy_engine import content_hash
 from bastion.gateway.redaction import get_redactor
+from bastion.seed import DEMO_POLICY
 from evals import assessor_suite
 from evals.scenario import Context, run_scenario
 
@@ -153,6 +155,8 @@ def run(suites: list[str] | None = None, settings: Settings | None = None) -> di
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "bastion_version": __version__,
         "mode": settings.mode,
+        # The policy the red-team and benign suites ran against (the demo agent's seed policy).
+        "policy_hash": content_hash(DEMO_POLICY.read_text(encoding="utf-8")),
         "suites": suites,
         "counts": counts,
         "metrics": metrics,

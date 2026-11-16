@@ -3,5 +3,5 @@
 Reference implementation; not production; not legal advice.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 DISCLAIMER = "Reference implementation; not production; not legal advice."

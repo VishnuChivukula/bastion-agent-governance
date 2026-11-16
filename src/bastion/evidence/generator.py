@@ -81,15 +81,15 @@ MAPPING: list[dict[str, str]] = [
     {
         "key": "incidents",
         "capability": "Incident lifecycle",
-        "eu": "Art. 72 (post-market monitoring); Art. 73 (serious incident reporting, "
-        "provider side)",
+        "eu": "Art. 72 (post-market monitoring, provider side); Art. 73 (serious incident "
+        "reporting, provider side)",
         "nist": "MANAGE",
         "iso": "10.2",
     },
     {
         "key": "card",
         "capability": "Agent card",
-        "eu": "Art. 13 (information to deployers); Art. 50 (transparency)",
+        "eu": "Art. 13 (information to deployers, provider side); Art. 50 (transparency)",
         "nist": "GOVERN, MAP",
         "iso": "7.4",
     },
@@ -283,10 +283,16 @@ def collect(engine: Engine, agent_id: str) -> EvidencePack:
             "counts": latest["counts"],
             "thresholds": latest["thresholds"],
             "failing": [c["id"] for c in latest["cases"] if not c["pass"]],
+            "policy_hash": latest.get("policy_hash"),
         }
 
     check = verify_chain(engine)
     policy = _policy(engine, agent_id)
+    if robustness is not None:
+        # The suites exercise one policy. They say nothing about a different policy in force.
+        robustness["matches_policy"] = bool(
+            policy and robustness["policy_hash"] and policy["hash"] == robustness["policy_hash"]
+        )
     present = {
         "classification": bool(registration and registration.classification),
         "policy": policy is not None,
@@ -294,7 +300,7 @@ def collect(engine: Engine, agent_id: str) -> EvidencePack:
         "approvals": bool(approvals),
         "killswitch": bool(kills),
         "redaction": redactions > 0,
-        "redteam": robustness is not None,
+        "redteam": bool(robustness and robustness["matches_policy"]),
         "incidents": bool(incidents),
         "card": bool(registration and registration.card),
         "budgets": bool(policy and any(v is not None for v in policy["budgets"].values())),

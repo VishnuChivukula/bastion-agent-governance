@@ -3,7 +3,7 @@
 from sqlalchemy import Engine, select, update
 
 from bastion.audit.log import AuditLog
-from bastion.db import session_scope
+from bastion.db import read_scope, session_scope
 from bastion.incidents.service import IncidentService
 from bastion.models import Agent, KillSwitch, Run, iso
 from bastion.oversight.approvals import ApprovalService
@@ -30,7 +30,7 @@ class KillSwitchService:
 
     def active_scope(self, agent_id: str) -> str | None:
         """'global', the agent id, or None if the agent may act."""
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             rows = session.scalars(
                 select(KillSwitch.scope).where(
                     KillSwitch.active.is_(True), KillSwitch.scope.in_((GLOBAL, agent_id))
@@ -41,12 +41,12 @@ class KillSwitchService:
         return agent_id if rows else None
 
     def is_active(self, scope: str) -> bool:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             row = session.get(KillSwitch, scope)
             return bool(row and row.active)
 
     def status(self) -> list[KillSwitch]:
-        with session_scope(self.engine) as session:
+        with read_scope(self.engine) as session:
             return list(session.scalars(select(KillSwitch).order_by(KillSwitch.scope)))
 
     def kill(self, scope: str, *, reason: str, actor: str) -> dict:

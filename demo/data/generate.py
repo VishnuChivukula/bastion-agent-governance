@@ -133,8 +133,12 @@ def restore(db_path: Path, *, isolate: bool = False) -> Path:
             )  # fmt: skip
         else:
             build(pristine)
-    with sqlite3.connect(pristine) as source, sqlite3.connect(db_path) as target:
+    source, target = sqlite3.connect(pristine), sqlite3.connect(db_path)
+    try:
         source.backup(target)
+    finally:
+        source.close()
+        target.close()
     return db_path
 
 
