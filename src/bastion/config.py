@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     @property
     def effective_passcode(self) -> str | None:
         """The passcode mutating actions must present. None: mutating actions are disabled."""
-        if self.passcode is not None and self.passcode.get_secret_value():
-            return self.passcode.get_secret_value()
+        if self.passcode is not None and self.passcode.get_secret_value().strip():
+            return self.passcode.get_secret_value().strip()
         return LOCAL_DEV_PASSCODE if self.local_dev else None
 
     @property

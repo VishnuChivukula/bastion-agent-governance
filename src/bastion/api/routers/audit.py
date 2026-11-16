@@ -1,12 +1,14 @@
 """Audit log (read-only), chain verification and the overview numbers."""
 
 import json
+import time
 
 from fastapi import APIRouter
 from sqlalchemy import func, select
 
 from bastion.api.auth import State
 from bastion.api.schemas import AuditEventOut, Overview
+from bastion.api.state import AppState
 from bastion.audit.verify import VerifyResult, verify_chain
 from bastion.db import session_scope
 from bastion.models import Agent, Approval, AuditEvent, Incident
@@ -52,9 +54,24 @@ def verify(state: State) -> VerifyResult:
     return verify_chain(state.engine)
 
 
+_VERIFY_TTL_S = 5.0
+_verify_cache: dict[int, tuple[float, VerifyResult]] = {}
+
+
+def _cached_verify(state: AppState) -> VerifyResult:
+    """Overview polls; re-walking the whole chain on every load would let traffic slow it down.
+    `GET /audit/verify` always recomputes."""
+    now = time.monotonic()
+    hit = _verify_cache.get(id(state.engine))
+    if hit is None or now - hit[0] > _VERIFY_TTL_S:
+        hit = (now, verify_chain(state.engine))
+        _verify_cache[id(state.engine)] = hit
+    return hit[1]
+
+
 @router.get("/overview")
-def overview(state: State) -> Overview:
-    check = verify_chain(state.engine)
+def overview(state: State, fresh: bool = False) -> Overview:
+    check = verify_chain(state.engine) if fresh else _cached_verify(state)
     with session_scope(state.engine) as session:
         agents = session.scalar(select(func.count()).select_from(Agent))
         killed = session.scalar(

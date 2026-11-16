@@ -3,6 +3,7 @@ passcode, compared in constant time. With no passcode configured, mutating route
 """
 
 import hmac
+import time
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
@@ -21,10 +22,26 @@ def check_passcode(state: AppState, supplied: str | None) -> None:
             403, "Mutating actions are disabled: no BASTION_PASSCODE is configured on this server."
         )
     if not supplied or not hmac.compare_digest(supplied.encode(), expected.encode()):
-        state.gateway.audit.append(
-            "passcode_rejected", actor="anonymous", payload={"supplied": bool(supplied)}
-        )
+        _audit_rejection(state, bool(supplied))
         raise HTTPException(401, "A valid passcode is required for this action.")
+
+
+_REJECTION_WINDOW_S = 10.0
+_rejections = {"last": 0.0, "suppressed": 0}
+
+
+def _audit_rejection(state: AppState, supplied: bool) -> None:
+    """At most one `passcode_rejected` event per window, so guessing cannot flood the log."""
+    now = time.monotonic()
+    if now - _rejections["last"] < _REJECTION_WINDOW_S:
+        _rejections["suppressed"] += 1
+        return
+    state.gateway.audit.append(
+        "passcode_rejected",
+        actor="anonymous",
+        payload={"supplied": supplied, "suppressed_since_last": _rejections["suppressed"]},
+    )
+    _rejections["last"], _rejections["suppressed"] = now, 0
 
 
 def require_passcode(

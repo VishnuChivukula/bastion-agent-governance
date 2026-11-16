@@ -104,7 +104,9 @@ class DownstreamPool:
     """Connections to downstream tool servers, started on first use and shared."""
 
     def __init__(self, env: dict[str, str] | None = None) -> None:
-        self.env = {**os.environ, **(env or {})}
+        # Tool servers get a minimal environment: never the API key, passcode or other secrets.
+        inherited = {k: v for k, v in os.environ.items() if k in _PASS_THROUGH_ENV}
+        self.env = {**inherited, **(env or {})}
         self._connections: dict[tuple[str, ...], _Connection] = {}
         self._lock = asyncio.Lock()
 
@@ -124,6 +126,11 @@ class DownstreamPool:
         for connection in self._connections.values():
             await connection.stop()
         self._connections.clear()
+
+
+_PASS_THROUGH_ENV = frozenset(
+    {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "TZ", "PYTHONPATH", "VIRTUAL_ENV", "SYSTEMROOT"}
+)
 
 
 def _text(result: types.CallToolResult) -> str:

@@ -74,15 +74,26 @@ def render() -> None:
 
     approver = "scripted"
     if scenario["needs_approval"]:
-        who = st.radio(
-            "Who plays the approver?",
-            ["The scenario script", "Me"],
-            horizontal=True,
-            help="'Me' pauses the run until you approve or reject (needs the passcode).",
+        if common.can_mutate(info):
+            who = st.radio(
+                "Who plays the approver?",
+                ["The scenario script", "Me"],
+                horizontal=True,
+                help="'Me' pauses the run until you approve or reject.",
+            )
+            approver = "human" if who == "Me" else "scripted"
+        else:
+            st.caption(
+                "The scenario script plays the approver. With the passcode you can decide "
+                "the approval yourself."
+            )
+    if not info["demo_policy_is_seed"] and info["mode"] == "replay":
+        st.warning(
+            "The policy in force is not the seed policy the scenarios were recorded with. A "
+            "run may leave its recording and stop early; roll back on the Policies page to "
+            "restore it.",
+            icon="📜",
         )
-        approver = "human" if who == "Me" else "scripted"
-        if approver == "human" and not common.can_mutate(info):
-            common.explain_locked(info)
     st.caption(
         "Starting a scenario first resets the demo: fresh bank data, kill switch released, "
         "open incidents resolved, open approvals revoked. The reset is audited."

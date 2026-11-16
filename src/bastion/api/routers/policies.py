@@ -9,7 +9,7 @@ from bastion.api.auth import Actor, Guarded, State
 from bastion.api.routers.agents import get_agent_or_404
 from bastion.api.schemas import PolicyDetail, PolicyDiff, PolicyIn, PolicyVersionOut
 from bastion.api.state import AppState
-from bastion.gateway.policy_engine import PolicyLoadError
+from bastion.gateway.policy_engine import Policy, PolicyLoadError
 from bastion.models import PolicyRow
 
 router = APIRouter(tags=["policies"])
@@ -70,6 +70,19 @@ def activate(agent_id: str, body: PolicyIn, state: State, who: Actor) -> PolicyD
     current = state.gateway.policies.active_row(agent_id)
     if current is not None and current.content_yaml == body.content_yaml:
         raise HTTPException(409, "this is already the policy in force")
+    try:
+        proposed = Policy.from_yaml(body.content_yaml)
+        in_force = state.gateway.policies.active(agent_id)
+    except PolicyLoadError as exc:
+        raise HTTPException(422, f"invalid policy: {exc}") from exc
+    if in_force is None or proposed.downstream != in_force.downstream:
+        # `downstream.command` is a process the gateway starts. It is set when an agent is
+        # onboarded (seed / registry), never through the policy editor.
+        raise HTTPException(
+            422,
+            "invalid policy: the `downstream` section cannot be changed through the API; "
+            "tool servers are fixed when the agent is onboarded",
+        )
     try:
         row = state.gateway.policies.activate(agent_id, body.content_yaml, created_by=who)
     except PolicyLoadError as exc:

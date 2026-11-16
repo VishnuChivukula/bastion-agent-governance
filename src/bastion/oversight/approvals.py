@@ -9,7 +9,7 @@ import json
 from datetime import timedelta
 from typing import Any
 
-from sqlalchemy import Engine, func, select
+from sqlalchemy import Engine, func, select, update
 
 from bastion.db import session_scope
 from bastion.models import Approval, iso, utcnow
@@ -110,12 +110,22 @@ class ApprovalService(ApprovalStore):
             approval = session.get(Approval, approval_id)
             if approval is None:
                 raise ApprovalError(f"unknown approval '{approval_id}'")
-            if approval.status != "pending":
+            # One conditional UPDATE: a kill switch revoking at the same moment cannot be
+            # overwritten by this decision.
+            claimed = session.execute(
+                update(Approval)
+                .where(Approval.id == approval_id, Approval.status == "pending")
+                .values(
+                    status="approved" if approve else "rejected",
+                    decided_by=decided_by,
+                    reason=reason.strip(),
+                    decided_at=iso(),
+                )
+            )
+            if claimed.rowcount != 1:
+                session.refresh(approval)
                 raise ApprovalError(f"approval is {approval.status}, not pending")
-            approval.status = "approved" if approve else "rejected"
-            approval.decided_by = decided_by
-            approval.reason = reason.strip()
-            approval.decided_at = iso()
+            session.refresh(approval)
         self.audit.append(
             "approval_decided",
             actor=decided_by,

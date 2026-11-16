@@ -29,6 +29,10 @@ class RunBusy(Exception):
     pass
 
 
+class RunRefused(Exception):
+    pass
+
+
 class RunManager:
     def __init__(self, state: "AppState") -> None:
         self.state = state
@@ -67,7 +71,8 @@ class RunManager:
                 self._end(run_id, "completed", REPLAY_MISS_TEXT)
             except Exception as exc:  # noqa: BLE001 - a failed run must not take the API down
                 log.exception("run %s failed", run_id)
-                self.errors[run_id] = f"{type(exc).__name__}: {exc}"[:500]
+                # Details stay in the server log; the public API shows only the error type.
+                self.errors[run_id] = f"The run failed ({type(exc).__name__}). See the server log."
                 self._end(run_id, "failed", "")
 
         self._tasks[run_id] = asyncio.create_task(guarded(), name=f"run:{run_id}")
@@ -87,6 +92,16 @@ class RunManager:
         scenario = BY_ID[scenario_id]
         if (active := self.busy()) is not None:
             raise RunBusy(f"run {active} is still in progress")
+        if self.gateway.killswitch.is_active("global"):
+            raise RunBusy(
+                "the global kill switch is active; it must be released (with the passcode) "
+                "before scenarios can run"
+            )
+        if approver == "human" and self.state.settings.effective_passcode is None:
+            raise RunRefused(
+                "no passcode is configured on this server, so nobody could decide the "
+                "approval; run with the scripted approver instead"
+            )
         registry = self.gateway.registry
         for parked in registry.list_runs(limit=200):
             if parked.status in ("running", "interrupted"):  # abandoned by this new run

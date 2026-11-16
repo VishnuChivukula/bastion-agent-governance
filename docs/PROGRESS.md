@@ -10,7 +10,7 @@
 | S2 Demo agent + replay | ☑ | see `git log` (`feat: loan ops agent`) | LangGraph agent (model → tools → await_approval with `interrupt()`), MCP HTTP client with bearer token, 10 recorded fixtures, `make demo` runs UC-02..UC-07 in replay with a decision timeline; `make record` re-records |
 | S3 Oversight | ☑ | see `git log` (`feat: oversight`) | args-bound single-use grants, TTL, revoke, kill switch (agent + global), incident rules + lifecycle, model token/cost budgets; UC-04..UC-07 pass end to end in replay; RT-13..RT-23 covered in pytest |
 | S4 API + console | ☑ | see `git log` (`feat: control-plane API`) | FastAPI control plane with the gateway mounted at `/mcp`; routers for agents, kill switch, usage, policies (versions, diff, activate), approvals, incidents, runs, audit (events, verify), overview; evidence route answers 501 until S7; fail-closed passcode guard (ADR-008); Streamlit console with Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry, Policies; `make serve` via honcho; 345 tests, 95% coverage |
-| S8 Package + deploy | ☐ | | |
+| S8 Package + deploy | ☑ | see `git log` (`ci: Dockerfile`) | Dockerfile (python:3.12-slim, uv, non-root), `docker-compose.yml` (`make up`), `railway.json`, `scripts/smoke.py` (`make smoke`, also the container HEALTHCHECK); CI `docker` job builds the image, waits for health and runs UC-03 inside the container. Playwright/Chromium is added to the image in S7 with the feature that needs it |
 | S9a Ship-now polish | ☐ | | |
 | S5 Registry + assessor | ☐ | | |
 | S6 Evals + CI gate | ☐ | | |
@@ -18,7 +18,7 @@
 | S9b Showcase | ☐ | | |
 
 ## Next exact step
-S4 reviewer findings (if any P0/P1 remain, fix first). Then S8: Dockerfile (python:3.12-slim, uv sync, non-root), `docker-compose.yml`, `railway.json`, CI `docker build` job that starts the container and checks `/healthz` and the console; `make up`. Then S9a (README v1, release v0.1.0), S5, S6, S7, S9b.
+S9a: README v1 (doc-writer), fix S4 reviewer P0/P1 findings, fresh-clone `make demo` check, `gh release create v0.1.0 --generate-notes`. Then S5, S6, S7, S9b.
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -56,11 +56,16 @@ S4 reviewer findings (if any P0/P1 remain, fix first). Then S8: Dockerfile (pyth
 - 2026-11-16 — Console pages are thin files in `console/pages/` that call `console/views/*.render()`; the first page can be chosen with `BASTION_CONSOLE_START_PAGE` — Streamlit's test harness can only open the start page reliably, and the GIF recorder needs deep links.
 - 2026-11-16 — Honcho gives the first Procfile entry the platform's `$PORT`, so `console` is listed first and the API stays on 127.0.0.1:8000 (not exposed publicly).
 - 2026-11-16 — Dependabot PRs #1–#3 were already closed (the action versions they proposed are in `ci.yml`).
+- 2026-11-16 — S8: the public port serves the console only; the API and gateway bind loopback inside the container (compose opts in to publishing :8000 for local use) — the smallest public surface for a demo deployment. Railway's health check uses the console's `/_stcore/health`; the container HEALTHCHECK checks both processes.
+- 2026-11-16 — Reviewer pass on S0–S4: no P0; three P1 fixed before release — (1) the demo reset no longer releases the global kill switch and runs answer 409 while it is active; (2) the policy API rejects changes to `downstream` and tool servers start with a minimal environment, so a passcode holder cannot make the gateway run an arbitrary command or read secrets; (3) `approver: human` is refused without a configured passcode and the console hides the option. P2 fixed: rejected-passcode audit events are throttled, Overview caches chain verification for 5 s (`/audit/verify` always recomputes), approval decisions are one conditional UPDATE, run errors shown publicly carry only the error type, whitespace passcodes are ignored, a test walks the OpenAPI spec to prove every POST route is guarded, Run Scenario warns when the policy in force is not the seed policy.
+- 2026-11-16 — README regulatory summary lists only capabilities that exist; rows for classification, evals and evidence are added with their slices.
 
 ## Human actions needed
-- None now. Later: Railway deploy after S8 (`kit-local/START_HERE.md` step 7); review `docs/VERIFY.md`.
+- **Railway deploy** (`kit-local/START_HERE.md` step 7): create the project from the GitHub repo (it picks up `railway.json`), set `BASTION_PASSCODE` to a value of your choice (leave `ANTHROPIC_API_KEY` unset: replay mode), generate a public domain, then paste the URL with `prompts/DEPLOY_DONE.md`. Not blocking: the remaining slices continue without it.
+- Review `docs/VERIFY.md` (after S9b consolidates it).
 
 ## Deferred / known gaps
+- Reviewer P2/P3 left open: failed gateway logins (`auth_failed`) are audited one event per attempt (not throttled); a parked run whose approval expires stays `interrupted` until the next scenario run supersedes it; if a passcode holder decides a scripted run's approval in the instant before the script does, that run is marked failed.
 - Makefile targets `eval`, `evidence`, `gif`, `serve`, `up` print "not yet: Sx" until their slice lands.
 - "Active runs halted" marks run rows as `halted` and blocks the agent's next model or tool call; a run parked at an approval interrupt is not resumed.
 - Fixtures cover the six scripted scenarios only. Any change to the agent's prompts, tool manifest, policy redaction rules or demo data needs `make record` (requires a key).

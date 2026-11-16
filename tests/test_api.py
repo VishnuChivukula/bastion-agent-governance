@@ -80,10 +80,35 @@ def test_mutations_are_disabled_without_a_configured_passcode(locked, path, body
     assert locked.anon.get("/meta").json()["mutations_enabled"] is False
 
 
-def test_rejected_passcodes_are_audited(api):
-    api.anon.post("/killswitch/global/kill", json={"reason": "x"})
+def test_rejected_passcodes_are_audited_without_flooding_the_log(api):
+    for _ in range(20):
+        api.anon.post("/killswitch/global/kill", json={"reason": "x"})
     events = api.anon.get("/audit/events", params={"event_type": "passcode_rejected"}).json()
     assert events and events[0]["actor"] == "anonymous"
+    assert len(events) <= 3  # throttled: one event per window, not one per guess
+
+
+def test_every_mutating_route_is_guarded(locked):
+    """Walk the app: a new POST route cannot ship without the passcode guard."""
+    open_routes = {"/runs", "/mcp"}  # replay scenario start (ADR-008); agent-token auth
+    spec = locked.anon.get("/openapi.json").json()["paths"]
+    posts = [path for path, ops in spec.items() if "post" in ops and path not in open_routes]
+    assert len(posts) >= 7
+    for path in posts:
+        url = path.replace("{agent_id}", "loan-ops-agent").replace("{approval_id}", "APR-x")
+        url = url.replace("{incident_id}", "1")
+        assert locked.anon.post(url, json={}).status_code == 403, path
+
+
+def test_human_approver_is_refused_when_nobody_could_approve(locked):
+    refused = locked.anon.post("/runs", json={"scenario": "uc04", "approver": "human"})
+    assert refused.status_code == 403 and "no passcode" in refused.json()["detail"]
+
+
+def test_whitespace_passcode_is_not_a_passcode():
+    from bastion.config import Settings
+
+    assert Settings(_env_file=None, BASTION_PASSCODE="  ").effective_passcode is None
 
 
 def test_local_dev_passcode_only_with_the_flag(tmp_path):
@@ -232,6 +257,10 @@ def test_kill_revokes_pending_and_halts_the_parked_run(api):
 def test_global_kill_and_reactivate(api):
     assert api.admin.post("/killswitch/global/kill", json={"reason": "Drill."}).status_code == 200
     assert api.anon.get("/overview").json()["global_kill"] is True
+    # a visitor starting a scenario must not release the global switch
+    blocked = api.anon.post("/runs", json={"scenario": "uc02"})
+    assert blocked.status_code == 409 and "global kill switch" in blocked.json()["detail"]
+    assert api.anon.get("/overview").json()["global_kill"] is True
     assert api.anon.get(f"/agents/{AGENT}").json()["killed_by"] == "global"
     ok = api.admin.post("/killswitch/global/reactivate", json={"reason": "Drill over."})
     assert ok.status_code == 200
@@ -279,10 +308,29 @@ def test_policy_change_new_version_diff_and_decisions_use_the_new_hash(api):
                                                      "limit": 1}).json()[0]  # fmt: skip
     assert decision["payload"]["policy_hash"] == new["content_hash"]
 
+    assert api.anon.get("/meta").json()["demo_policy_is_seed"] is False
     same = api.admin.post(f"/agents/{AGENT}/policies", json={"content_yaml": edited})
     assert same.status_code == 409
     restored = api.admin.post(f"/agents/{AGENT}/policies", json={"content_yaml": SEED_POLICY})
     assert restored.status_code == 201 and restored.json()["content_hash"] == old["content_hash"]
+
+
+def test_policy_api_cannot_change_the_downstream_command(api):
+    """A passcode holder must not be able to make the gateway start an arbitrary process."""
+    evil = SEED_POLICY.replace('["python", "-m", "demo.tools_server"]', '["sh", "-c", "id"]')
+    assert evil != SEED_POLICY
+    refused = api.admin.post(f"/agents/{AGENT}/policies", json={"content_yaml": evil})
+    assert refused.status_code == 422 and "downstream" in refused.json()["detail"]
+
+
+def test_tool_servers_do_not_inherit_secrets(monkeypatch):
+    from bastion.gateway.mcp_proxy import DownstreamPool
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "not-a-real-key")
+    monkeypatch.setenv("BASTION_PASSCODE", "not-a-real-passcode")
+    env = DownstreamPool({"BASTION_DEMO_DB": "x.db"}).env
+    assert "ANTHROPIC_API_KEY" not in env and "BASTION_PASSCODE" not in env
+    assert env["BASTION_DEMO_DB"] == "x.db" and "PATH" in env
 
 
 @pytest.mark.parametrize(
@@ -329,7 +377,7 @@ def test_tampering_shows_up_in_verify_and_overview(tmp_path):
             conn.execute("update audit_events set actor = 'someone-else' where seq = 3")
         check = server.anon.get("/audit/verify").json()
         assert check["ok"] is False and check["first_broken_seq"] == 3
-        overview = server.anon.get("/overview").json()
+        overview = server.anon.get("/overview", params={"fresh": True}).json()
         assert overview["audit_ok"] is False and overview["audit_first_broken_seq"] == 3
 
 

@@ -147,7 +147,10 @@ class AgentRunner:
             status = "completed" if status == "max_steps" else status
         with_kill = self.gateway.killswitch.active_scope(self.agent_id) is not None
         if with_kill and status != "interrupted":
-            status = "halted"  # the kill switch already marked the run row
+            status = "halted"
+            row = registry.get_run(run_id)
+            if row is not None and row.status != "halted":  # killed before this run resumed
+                registry.set_run_status(run_id, "halted")
         else:
             registry.set_run_status(run_id, status)
         registry.set_run_text(run_id, state.get("final_text", ""))
@@ -375,11 +378,11 @@ class DemoEnvironment:
 def reset_demo_state(gateway: Gateway, demo_db: Path, actor: str = APPROVER) -> None:
     """Each scenario starts from the same bank data and an agent that is allowed to act."""
     build_demo_data(demo_db)
-    for scope in ("global", DEMO_AGENT_ID):
-        if gateway.killswitch.is_active(scope):
-            gateway.killswitch.reactivate(
-                scope, reason="Demo: reset before the next scenario", actor=actor
-            )
+    # Only the demo agent's own switch. The global kill switch is never released by a reset.
+    if gateway.killswitch.is_active(DEMO_AGENT_ID):
+        gateway.killswitch.reactivate(
+            DEMO_AGENT_ID, reason="Demo: reset before the next scenario", actor=actor
+        )
     for incident in gateway.incidents.all(agent_id=DEMO_AGENT_ID):
         if incident.status != "resolved":
             gateway.incidents.advance(

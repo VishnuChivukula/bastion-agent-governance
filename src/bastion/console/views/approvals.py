@@ -47,8 +47,8 @@ def render() -> None:
     st.subheader(f"Waiting for a decision ({len(pending)})")
     if not pending:
         st.caption(
-            "Nothing is waiting. Run **UC-04** on the Run Scenario page with the approver set "
-            "to *me* to see a run pause here."
+            "Nothing is waiting. With the passcode, run **UC-04** on the Run Scenario page "
+            "with the approver set to *Me* to see a run pause here."
         )
     for approval in pending:
         decision_form(approval, info)

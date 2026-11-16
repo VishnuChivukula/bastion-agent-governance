@@ -13,7 +13,14 @@ from bastion.api.routers import agents, audit, evidence, oversight, policies, ru
 from bastion.api.schemas import Meta
 from bastion.api.state import build_state
 from bastion.config import Settings, get_settings
+from bastion.gateway.policy_engine import content_hash
 from bastion.gateway.server import build_mcp_route
+from bastion.seed import DEMO_AGENT_ID, DEMO_POLICY
+
+
+def _seed_policy_in_force(state) -> bool:
+    row = state.gateway.policies.active_row(DEMO_AGENT_ID)
+    return row is None or row.content_hash == content_hash(DEMO_POLICY.read_text(encoding="utf-8"))
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -53,6 +60,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             mutations_enabled=state.settings.effective_passcode is not None,
             local_dev=state.settings.local_dev and state.settings.passcode is None,
             disclaimer=DISCLAIMER,
+            demo_policy_is_seed=_seed_policy_in_force(state),
         )
 
     for module in (agents, policies, oversight, runs, audit, evidence):

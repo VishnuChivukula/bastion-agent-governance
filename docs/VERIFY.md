@@ -36,6 +36,7 @@ Bastion supports evidence for obligations; it does not make a system compliant. 
 | 26 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 10.2 | Nonconformity and corrective action | unverified |
 | 27 | docs/GOVERNANCE_MAPPING.md | DORA | ICT logging and ICT incident management expectations (optional mention) | unverified |
 | 28 | docs/USE_CASES.md (UC-01), docs/SPEC.md | EU AI Act Annex III | A credit-related agent (creditworthiness / credit limits) falls under a high-risk use case | unverified |
+| 30 | README.md (Governance mapping summary) | EU AI Act Art. 9, 10, 12, 14, 26, 72, 73; GDPR Art. 5(1)(c); NIST AI RMF functions; ISO/IEC 42001 clauses 6.1, 7.5, 8.1, 8.2, 8.3, 9.1, 10.2; provider vs deployer | Repeats rows 3–8, 10, 11, 15, 16, 18, 20–23, 25, 26 for the capabilities built so far | unverified |
 | 29 | docs/EVALS.md (Suite C) | EU AI Act Art. 5, Art. 6, Annex III, Art. 50 | Gold tiers for the 12 synthetic agent cards | unverified |
 
 No ISO/IEC 42001 Annex A control identifiers are cited anywhere in this repository; references are at clause level only.

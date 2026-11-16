@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from bastion.api.auth import PASSCODE_HEADER, Actor, State, check_passcode
 from bastion.api.routers.oversight import approval_out
-from bastion.api.runs import RunBusy
+from bastion.api.runs import RunBusy, RunRefused
 from bastion.api.schemas import RunDetail, RunIn, RunOut, ScenarioOut
 from bastion.api.state import AppState
 from bastion.models import AuditEvent, Run
@@ -49,6 +49,8 @@ async def start_run(
         run_id = state.runs.start(body.scenario, body.approver, who)
     except RunBusy as exc:
         raise HTTPException(409, str(exc)) from exc
+    except RunRefused as exc:
+        raise HTTPException(403, str(exc)) from exc
     return RunOut.model_validate(state.gateway.registry.get_run(run_id))
 
 

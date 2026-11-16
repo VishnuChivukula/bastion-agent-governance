@@ -15,6 +15,7 @@ class Meta(BaseModel):
     mutations_enabled: bool
     local_dev: bool
     disclaimer: str
+    demo_policy_is_seed: bool = True  # recorded scenarios assume the seed policy
 
 
 class Reason(BaseModel):
