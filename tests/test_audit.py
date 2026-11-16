@@ -136,3 +136,38 @@ def test_cli_verify_audit_exit_codes(engine, tmp_path, monkeypatch):  # UC-10
         assert broken.exit_code == 1 and "BROKEN at seq 2" in broken.output
     finally:
         get_settings.cache_clear()
+
+
+def test_concurrent_read_then_write_units_of_work_do_not_fail_with_database_is_locked(engine):
+    """Regression: many threads each read, then write, in one unit of work (plus audit appends)."""
+    import threading
+
+    from sqlalchemy import func, select
+
+    from bastion.audit.log import AuditLog
+    from bastion.db import session_scope
+    from bastion.models import Usage
+
+    audit, errors = AuditLog(engine), []
+
+    def work(n: int) -> None:
+        try:
+            for i in range(25):
+                with session_scope(engine) as session:
+                    session.scalar(select(func.count()).select_from(Usage))
+                    session.add(Usage(agent_id="a", run_id=f"r{n}", kind="tool"))
+                audit.append("stress", actor=f"t{n}", payload={"i": i})
+        except Exception as exc:  # noqa: BLE001 - collected for the assertion
+            errors.append(exc)
+
+    threads = [threading.Thread(target=work, args=(n,)) for n in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert errors == []
+    with session_scope(engine) as session:
+        assert session.scalar(select(func.count()).select_from(Usage)) == 200
+    from bastion.audit.verify import verify_chain
+
+    assert verify_chain(engine).ok and verify_chain(engine).events == 200

@@ -44,7 +44,14 @@ def make_engine(db_path: Path | str) -> Engine:
 
 @contextmanager
 def session_scope(engine: Engine) -> Iterator[Session]:
-    session = Session(engine, expire_on_commit=False)
+    """A unit of work. It takes the SQLite write lock when it begins (BEGIN IMMEDIATE).
+
+    Most units of work here read and then write. A deferred transaction that does that fails
+    with "database is locked" if another connection commits in between, and SQLite's busy
+    timeout does not apply to that upgrade. Taking the lock up front makes writers queue
+    (up to the 15 s timeout) instead of failing. Plain reads use `engine.connect()`.
+    """
+    session = Session(engine.execution_options(immediate=True), expire_on_commit=False)
     try:
         yield session
         session.commit()

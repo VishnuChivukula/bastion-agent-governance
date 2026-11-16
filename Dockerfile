@@ -30,7 +30,9 @@ RUN uv sync --locked --no-dev
 
 # Headless Chromium (with its system libraries) for the evidence pack PDF (ADR-006).
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
-RUN playwright install --with-deps chromium \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 \
+    && playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 
 # Run as an unprivileged user; only the data directory is writable.

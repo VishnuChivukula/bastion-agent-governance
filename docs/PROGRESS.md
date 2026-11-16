@@ -70,13 +70,13 @@ S9b: `scripts/make_gif.py` + `make gif` → `docs/assets/demo.gif` in the README
 - 2026-11-17 — The framework mapping in the pack lists only capabilities for which the pack holds evidence and names the omitted ones — an auditor should not read a mapping row as proof that something happened.
 - 2026-11-17 — `make evidence` reads the local database (seeding the demo agent if it is empty); `make evidence-sample` first runs the scripted scenarios in a throwaway environment, which is how `docs/samples/` is produced.
 - 2026-11-17 — `make setup` and CI install Playwright's Chromium; the Docker image installs it with system libraries (`PLAYWRIGHT_BROWSERS_PATH=/opt/playwright`). Without Chromium the HTML pack still works and the PDF route answers 503.
+- 2026-11-17 — CI failure on the S7 commit (two causes). (1) `database is locked`: units of work that read and then wrote began as deferred transactions, which fail on the lock upgrade under contention (SQLite's busy timeout does not cover it). `session_scope` now begins with `BEGIN IMMEDIATE`, so writers queue; a regression test with eight threads fails without the fix. This was also the unexplained one-off `make check` failure during S5. (2) The Docker build needed `libatomic1` for Playwright's driver.
 
 ## Human actions needed
 - **Railway deploy** (`kit-local/START_HERE.md` step 7): create the project from the GitHub repo (it picks up `railway.json`), set `BASTION_PASSCODE` to a value of your choice (leave `ANTHROPIC_API_KEY` unset: replay mode), generate a public domain, then paste the URL with `prompts/DEPLOY_DONE.md`. Not blocking: the remaining slices continue without it.
 - Review `docs/VERIFY.md` (after S9b consolidates it).
 
 ## Deferred / known gaps
-- One `make check` run failed once during S5 and passed on every rerun and in CI; the failing test was not captured. Treat as a possible intermittent test (timing-sensitive candidates: the 50 ms latency test, console tests against the live test server).
 - Reviewer P2/P3 left open: failed gateway logins (`auth_failed`) are audited one event per attempt (not throttled); a parked run whose approval expires stays `interrupted` until the next scenario run supersedes it; if a passcode holder decides a scripted run's approval in the instant before the script does, that run is marked failed.
 - Makefile targets `eval`, `evidence`, `gif`, `serve`, `up` print "not yet: Sx" until their slice lands.
 - "Active runs halted" marks run rows as `halted` and blocks the agent's next model or tool call; a run parked at an approval interrupt is not resumed.
