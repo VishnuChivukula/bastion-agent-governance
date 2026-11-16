@@ -25,7 +25,7 @@ COPY fixtures ./fixtures
 COPY knowledge ./knowledge
 COPY evals ./evals
 COPY scripts ./scripts
-COPY Procfile LICENSE ./
+COPY Procfile LICENSE render.yaml ./
 RUN uv sync --locked --no-dev
 
 # Headless Chromium (with its system libraries) for the evidence pack PDF (ADR-006).
@@ -46,6 +46,7 @@ USER bastion
 ENV BASTION_MODE=replay \
     BASTION_DB_PATH=/app/data/bastion.db \
     BASTION_BIND=0.0.0.0 \
+    MALLOC_ARENA_MAX=2 \
     PORT=8501 \
     HOME=/app
 

@@ -46,7 +46,7 @@ def _seed(engine: Engine, settings: Settings) -> None:
 
 def build_state(settings: Settings) -> AppState:
     from bastion.api.runs import RunManager
-    from demo.data.generate import build as build_demo_data
+    from demo.data.generate import restore as restore_demo_data
 
     data_dir = Path(settings.db_path).parent
     engine = make_engine(settings.db_path)
@@ -54,11 +54,11 @@ def build_state(settings: Settings) -> AppState:
     if settings.seed_on_start:
         _seed(engine, settings)
         if not demo_db.exists():
-            build_demo_data(demo_db)
+            restore_demo_data(demo_db, isolate=settings.low_memory)
     state = AppState(
         settings=settings,
         engine=engine,
-        gateway=Gateway(engine, demo_db=demo_db),
+        gateway=Gateway(engine, demo_db=demo_db, low_memory=settings.low_memory),
         demo_db=demo_db,
         checkpoint_path=data_dir / "checkpoints.db",
     )

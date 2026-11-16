@@ -13,9 +13,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import Field
 
-from demo.data.generate import DEFAULT_DB, build
-
-DB_PATH = Path(os.environ.get("BASTION_DEMO_DB", DEFAULT_DB))
+DB_PATH = Path(os.environ.get("BASTION_DEMO_DB", "data/demo.db"))
 
 CustomerId = Annotated[str, Field(pattern=r"^C-\d{4}$", description="Customer id, e.g. C-0007")]
 
@@ -24,6 +22,8 @@ server = MCPServer("loan-tools")
 
 def _db() -> sqlite3.Connection:
     if not DB_PATH.exists():
+        from demo.data.generate import build  # Faker is heavy: load it only when needed
+
         build(DB_PATH)
     con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row

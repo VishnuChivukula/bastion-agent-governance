@@ -34,6 +34,22 @@ Under `make serve` the local passcode is `bastion-local`; it is accepted only in
 <!-- LIVE-URL -->
 **Live demo:** A hosted replay-mode demo link will be added here.
 
+### Deploy your own
+
+The image runs the console on the public port and keeps the API and gateway on loopback. Replay mode needs no API key. Set `BASTION_PASSCODE` to enable approvals, the kill switch and policy changes; without it the deployment is read-only apart from the recorded scenarios.
+
+| Host | Cost | How |
+|---|---|---|
+| [Render](https://render.com) | Free plan: 512 MB RAM, 0.1 CPU | New → Blueprint → pick this repository. [`render.yaml`](render.yaml) sets the Docker runtime, the free plan, the health check, `BASTION_MODE=replay` and `BASTION_LOW_MEMORY=true`. Enter a value for `BASTION_PASSCODE` when asked. |
+| [Railway](https://railway.com) | Paid | New project → Deploy from GitHub repo. [`railway.json`](railway.json) is picked up. Set `BASTION_PASSCODE`; leave `BASTION_LOW_MEMORY` unset for the full profile. |
+| Anywhere with Docker | - | `make up`, or `docker run -p 8501:8501 -e BASTION_PASSCODE=... <image>` |
+
+Notes for the free plan:
+
+- **Cold start.** The service sleeps after 15 minutes without traffic. The next visit waits for the container to start, typically around a minute on 0.1 CPU, and the first scenario after that is slower than later ones.
+- **Low-memory profile.** `BASTION_LOW_MEMORY=true` keeps the whole container under about 450 MB: PII masking uses a built-in pattern engine instead of Presidio and spaCy (same four entity types, verified equal on the demo data), and the evidence pack is HTML only because no headless browser is started. CI runs the image under a 512 MB limit and fails if it is killed. Details: [ADR-010](docs/adr/ADR-010-low-memory-mode.md).
+- **Nothing persists.** The disk is ephemeral: every start re-seeds the demo agent and the synthetic data.
+
 ## What you will see
 
 A Loan Ops agent (LangGraph) works against a demo tools server holding 50 synthetic customers. In replay mode the model responses come from recorded fixtures. Everything else is live: gateway, policy, tools, approvals and audit.
@@ -178,6 +194,7 @@ Obligations differ for providers and deployers under the EU AI Act; a bank using
 - **Record and replay for model calls** ([ADR-004](docs/adr/ADR-004-llm-replay-fixtures.md)). The demo and CI run with no key at zero cost. Trade-off: any prompt or tool-schema change needs a re-record.
 - **SQLite in WAL mode with SQLAlchemy** ([ADR-005](docs/adr/ADR-005-sqlite-wal-sqlalchemy.md)). Zero setup, one reproducible file. Trade-off: single writer, and tamper evidence rather than prevention.
 - **Low-level MCP server for the gateway** ([ADR-007](docs/adr/ADR-007-lowlevel-mcp-server.md)). Allows a per-agent tool list and a transport-agnostic enforcement class. Trade-off: the gateway validates arguments itself instead of relying on the SDK.
+- **A low-memory profile for free hosting** ([ADR-010](docs/adr/ADR-010-low-memory-mode.md)). The whole stack fits in 512 MB. Trade-off: a narrower PII engine and no PDF on that profile, and two engines to keep in agreement.
 - **Single container, API hosts the gateway, fail-closed passcode** ([ADR-001](docs/adr/ADR-001-single-container.md), [ADR-008](docs/adr/ADR-008-api-console-passcode-runs.md)). Simple to run and deploy. Trade-off: no horizontal scaling, and the enforcement point shares a failure domain with the API.
 
 ## Limitations
@@ -188,7 +205,7 @@ Obligations differ for providers and deployers under the EU AI Act; a bank using
 - The audit chain has no external anchor. `make verify-audit` detects modification, deletion and reordering, but truncation of the newest events leaves a shorter valid chain and is not detected.
 - The risk tier is decision support produced by two models from short paraphrased notes, not a legal classification. A human signs the tier, and every citation is unverified.
 - Replay covers only the recorded paths, and registration in replay covers only the twelve sample agent cards. Unrecorded paths, such as an approver rejecting, end the run with an explanatory message.
-- PII detection is pattern and NER based and will miss things.
+- PII detection is pattern based (Presidio recognisers by default, a smaller built-in engine in the low-memory profile) and will miss things; names and addresses are not masked.
 - The gateway only governs calls routed through it. An agent with a direct route to a tool is not covered.
 - In replay mode, anyone who can reach a deployment can start a recorded scenario, which first resets the demo agent (its data, kill switch, incidents and approvals). The global kill switch is never released by a reset.
 

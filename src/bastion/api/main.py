@@ -70,6 +70,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             local_dev=state.settings.local_dev and state.settings.passcode is None,
             disclaimer=DISCLAIMER,
             demo_policy_is_seed=_seed_policy_in_force(state),
+            low_memory=state.settings.low_memory,
+            pii_engine="light" if state.settings.low_memory else "presidio",
+            pdf_enabled=not state.settings.low_memory,
         )
 
     for module in (agents, registry, policies, oversight, runs, audit, evals, evidence):

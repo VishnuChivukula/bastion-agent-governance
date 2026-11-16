@@ -5,10 +5,9 @@ python -m demo.data.generate [db_path]
 
 import random
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
-
-from faker import Faker
 
 SEED = 42
 N_CUSTOMERS = 50
@@ -67,6 +66,8 @@ BENIGN_NOTES = [
 
 
 def build(db_path: Path = DEFAULT_DB, seed: int = SEED) -> Path:
+    from faker import Faker  # heavy: only loaded when data is actually generated
+
     fake = Faker("en_GB")
     fake.seed_instance(seed)
     rng = random.Random(seed)
@@ -111,6 +112,29 @@ def build(db_path: Path = DEFAULT_DB, seed: int = SEED) -> Path:
             )
     con.commit()
     con.close()
+    return db_path
+
+
+def restore(db_path: Path, *, isolate: bool = False) -> Path:
+    """Put the demo data back to its generated state.
+
+    The data is generated once into `<db>.pristine` and copied from there on every reset, so
+    a long-running process does not regenerate it (or keep Faker loaded). `isolate=True`
+    generates in a short-lived subprocess, for hosts where memory is tight.
+    """
+    db_path = Path(db_path)
+    pristine = db_path.with_name(db_path.name + ".pristine")
+    if not pristine.exists():
+        pristine.parent.mkdir(parents=True, exist_ok=True)
+        if isolate:
+            subprocess.run(  # noqa: S603 - this interpreter, this module, a path we built
+                [sys.executable, "-m", "demo.data.generate", str(pristine)],
+                check=True, cwd=Path(__file__).resolve().parents[2], capture_output=True,
+            )  # fmt: skip
+        else:
+            build(pristine)
+    with sqlite3.connect(pristine) as source, sqlite3.connect(db_path) as target:
+        source.backup(target)
     return db_path
 
 

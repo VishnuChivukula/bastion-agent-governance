@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     local_dev: bool = Field(False, validation_alias="BASTION_LOCAL_DEV")
     api_url: str = Field("http://127.0.0.1:8000", validation_alias="BASTION_API_URL")
     seed_on_start: bool = Field(True, validation_alias="BASTION_SEED_ON_START")
+    # For small hosts (512 MB): a built-in pattern engine instead of Presidio + spaCy for PII,
+    # and no headless browser, so the evidence pack is HTML only (ADR-010).
+    low_memory: bool = Field(False, validation_alias="BASTION_LOW_MEMORY")
     fixtures_dir: Path = Field(REPO_ROOT / "fixtures" / "llm", validation_alias="BASTION_FIXTURES")
     prices_path: Path = Field(
         REPO_ROOT / "config" / "prices.yaml", validation_alias="BASTION_PRICES_PATH"

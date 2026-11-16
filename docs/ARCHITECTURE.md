@@ -193,6 +193,7 @@ Jinja2 → HTML → Playwright Chromium `page.pdf(display_header_footer=True)`. 
 | `BASTION_MODEL_FAST` | `claude-haiku-5-5` |
 | `BASTION_MODEL_SMART` | `claude-sonnet-5-5` |
 | `BASTION_API_URL` | `http://127.0.0.1:8000` |
+| `BASTION_LOW_MEMORY` | `false` (`true` on small hosts: pattern PII engine instead of Presidio + spaCy, no headless browser, console without data frames; see ADR-010) |
 | `BASTION_LOCAL_DEV` | `false` (`make serve` sets it: with no passcode configured, the local passcode `bastion-local` is accepted; see ADR-008) |
 | `BASTION_SEED_ON_START` | `true` (seed demo agent, policy and data if the DB is empty) |
 

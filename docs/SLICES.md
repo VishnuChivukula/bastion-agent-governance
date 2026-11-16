@@ -2,7 +2,7 @@
 
 # Bastion v0.1: Build Plan (vertical slices)
 
-**Ship order (the cut line):** S0 → S1 → S2 → S3 → S4 → **S8 → S9a** (now publicly shippable) → S5 → S6 → S7 → S9b.
+**Ship order (the cut line):** S0 → S1 → S2 → S3 → S4 → **S8 → S9a** (now publicly shippable) → S5 → S6 → S7 → S8b → S9b.
 If Vishnu says usage is low, stop feature work and run `prompts/LOW_USAGE.md`.
 
 **Every slice's definition of done:** `make check` green · new code has tests · docs touched where behaviour changed · `docs/PROGRESS.md` updated (done / decisions / next) · commit · `git push` · print a 3-line status.
@@ -45,6 +45,12 @@ If Vishnu says usage is low, stop feature work and run `prompts/LOW_USAGE.md`.
 - Verify `docker compose up` locally if Docker is available; otherwise verify `docker build` in CI (add a CI job).
 - Tell Vishnu to do START_HERE step 7 (Railway clicks) and paste the URL using `prompts/DEPLOY_DONE.md`.
 - **DoD:** image builds in CI; the container serves the console and `/healthz` returns 200.
+
+## S8b: Free-tier hosting (added 2026-11-17)
+- `render.yaml` (Docker runtime, free plan, health check on the console, `BASTION_MODE=replay`, `BASTION_PASSCODE` as a dashboard secret).
+- `BASTION_LOW_MEMORY=true`: whole container under ~450 MB resident (ADR-010).
+- CI runs the image with a 512 MB limit, drives the console and UC-03, and fails on an OOM kill.
+- **DoD:** CI green with the 512 MB step; README deploy section covers Render (free) and Railway (paid).
 
 ## S9a: Ship-now polish (~20 min)
 - README v1 (via `doc-writer`): one-line pitch, badges (CI, licence, Python), "Try it in 2 minutes", architecture Mermaid, features mapped to the problem, scenarios, results table markers, governance mapping summary, design decisions, limitations + disclaimer, roadmap, author (LinkedIn `cvishnuprasad`).

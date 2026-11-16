@@ -55,9 +55,15 @@ def render() -> None:
         "Download HTML", html, file_name=f"evidence-pack-{agent_id}.html", mime="text/html"
     )
     try:
+        if not st.session_state["meta"]["pdf_enabled"]:
+            raise ApiError(
+                503,
+                "switched off on this small deployment (no headless browser). The HTML pack "
+                "is complete; a sample PDF is in the repository under docs/samples/.",
+            )
         pdf = api.get_bytes(f"/agents/{agent_id}/evidence.pdf")
     except ApiError as exc:
-        right.caption(f"PDF unavailable: {exc.detail}")
+        right.caption(f"PDF: {exc.detail}")
     else:
         right.download_button(
             "Download PDF", pdf, file_name=f"evidence-pack-{agent_id}.pdf",

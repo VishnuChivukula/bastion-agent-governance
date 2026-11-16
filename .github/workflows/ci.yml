@@ -72,3 +72,40 @@ jobs:
       - name: Logs
         if: always()
         run: docker logs bastion | tail -50
+
+      # Render's free tier gives 512 MB. Run the low-memory profile under that limit, put a real
+      # browser session and a governed scenario on it, and fail if the kernel had to kill it.
+      - name: Start a second container with a 512 MB memory limit (low-memory profile)
+        run: >
+          docker run -d --name bastion-small --memory=512m --memory-swap=512m
+          -e BASTION_LOW_MEMORY=true -p 8502:8501 bastion-agent-governance:ci
+      - name: Wait until healthy (512 MB)
+        run: |
+          for i in $(seq 1 60); do
+            if docker exec bastion-small python scripts/smoke.py --health-only; then exit 0; fi
+            sleep 3
+          done
+          docker logs bastion-small
+          exit 1
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Browser on the runner (outside the container's memory limit)
+        run: |
+          uv sync --locked
+          uv run playwright install --with-deps chromium
+      - name: Click through the console and run UC-03 from a real browser (512 MB)
+        run: uv run python scripts/console_walk.py --url http://localhost:8502
+      - name: UC-03 through the API, evidence pack as HTML (512 MB)
+        run: docker exec bastion-small python scripts/smoke.py
+      - name: Not OOM-killed, every process alive, under 450 MB resident
+        run: |
+          docker stats --no-stream bastion-small
+          docker exec bastion-small python scripts/memory_report.py --max 450 --min-processes 4
+          test "$(docker inspect -f '{{.State.OOMKilled}}' bastion-small)" = "false"
+          test "$(docker inspect -f '{{.State.Running}}' bastion-small)" = "true"
+          test "$(docker inspect -f '{{.RestartCount}}' bastion-small)" = "0"
+          ! docker logs bastion-small 2>&1 | grep -i -E "killed|out of memory|MemoryError"
+      - name: Logs (512 MB)
+        if: always()
+        run: docker logs bastion-small | tail -50

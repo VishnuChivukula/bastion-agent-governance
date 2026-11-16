@@ -1,6 +1,5 @@
 """Live Activity: the audit log as it is written. Refreshes itself."""
 
-import pandas as pd
 import streamlit as st
 
 from bastion.console import common
@@ -36,7 +35,7 @@ def feed(event_type: str | None, limit: int) -> None:
                 "Hash": short_hash(event["hash"], 10),
             }
         )
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", height=560)
+    common.table(rows, height=560)
     st.caption(f"Newest first · refreshes every 2 seconds · latest event #{events[0]['seq']}")
 
 

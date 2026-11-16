@@ -48,6 +48,11 @@ def scenario() -> None:
     check = json.loads(call(f"{API}/audit/verify")[1])
     assert check["ok"], f"audit chain broken: {check}"
     print(f"UC-03 blocked and halted; audit chain intact ({check['events']} events).")
+    status, html = call(f"{API}/agents/loan-ops-agent/evidence.html")
+    assert status == 200 and "Framework mapping" in html, "evidence pack HTML was not produced"
+    if not meta["pdf_enabled"]:
+        print(f"Evidence pack HTML generated; PDF is off (low-memory, {meta['pii_engine']} PII).")
+        return
     request = urllib.request.Request(f"{API}/agents/loan-ops-agent/evidence.pdf")
     with urllib.request.urlopen(request, timeout=120) as response:  # noqa: S310 - local URL
         pdf = response.read()

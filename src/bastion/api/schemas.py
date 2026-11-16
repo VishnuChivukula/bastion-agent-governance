@@ -16,6 +16,9 @@ class Meta(BaseModel):
     local_dev: bool
     disclaimer: str
     demo_policy_is_seed: bool = True  # recorded scenarios assume the seed policy
+    low_memory: bool = False
+    pii_engine: str = "presidio"  # "light" in low-memory mode
+    pdf_enabled: bool = True
 
 
 class Reason(BaseModel):

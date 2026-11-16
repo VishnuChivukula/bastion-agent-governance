@@ -1,6 +1,5 @@
 """Overview: is governance working right now?"""
 
-import pandas as pd
 import streamlit as st
 
 from bastion.console import common
@@ -42,23 +41,19 @@ def render() -> None:
 
     st.subheader("Agents")
     agents = api.get("/agents")
-    st.dataframe(
-        pd.DataFrame(
-            [
-                {
-                    "Agent": a["id"],
-                    "Status": a["status"],
-                    "Risk tier": a["tier"] or "-",
-                    "Owner": a["owner"],
-                    "Policy": f"v{a['policy_version']} · {short_hash(a['policy_hash'])}"
-                    if a["policy_version"]
-                    else "none (default deny)",
-                }
-                for a in agents
-            ]
-        ),
-        hide_index=True,
-        width="stretch",
+    common.table(
+        [
+            {
+                "Agent": a["id"],
+                "Status": a["status"],
+                "Risk tier": a["tier"] or "-",
+                "Owner": a["owner"],
+                "Policy": f"v{a['policy_version']} · {short_hash(a['policy_hash'])}"
+                if a["policy_version"]
+                else "none (default deny)",
+            }
+            for a in agents
+        ]
     )
 
     for agent in agents:
@@ -77,16 +72,12 @@ def render() -> None:
         sessions = [s for s in usage["sessions"] if s["run_id"] != "unbound"]
         cap = usage["max_tool_calls_per_session"]
         if sessions:
-            frame = pd.DataFrame(
-                {"Run": [s["run_id"][-6:] for s in sessions],
-                 "Tool calls": [s["tool_calls"] for s in sessions]}
-            )  # fmt: skip
-            if cap is not None:
-                frame["Session cap"] = cap
             st.caption(
                 "Tool calls per run (most recent runs)"
                 + (f". The gateway denies call number {cap + 1}." if cap is not None else ".")
             )
-            st.bar_chart(frame, x="Run", y="Tool calls", height=220)
+            common.bars(
+                [(s["run_id"][-6:], s["tool_calls"]) for s in sessions], "Run", "Tool calls", cap
+            )
             if cap is not None and any(s["tool_calls"] >= cap for s in sessions):
                 st.warning(f"At least one run hit the session cap of {cap} tool calls.", icon="🧱")

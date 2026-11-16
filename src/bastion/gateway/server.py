@@ -16,10 +16,10 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from bastion import __version__
 from bastion.gateway.mcp_proxy import Gateway
+from bastion.headers import RUN_HEADER
 
 AGENT_KEY = "bastion.agent_id"
 RUN_KEY = "bastion.run_id"
-RUN_HEADER = "x-bastion-run"
 
 
 class BearerAuth:

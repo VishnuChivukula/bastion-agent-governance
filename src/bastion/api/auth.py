@@ -9,9 +9,8 @@ from typing import Annotated
 from fastapi import Depends, Header, HTTPException
 
 from bastion.api.state import AppState, get_state
+from bastion.headers import ACTOR_HEADER, PASSCODE_HEADER
 
-PASSCODE_HEADER = "X-Bastion-Passcode"
-ACTOR_HEADER = "X-Bastion-Actor"
 DEFAULT_ACTOR = "console-user"
 
 

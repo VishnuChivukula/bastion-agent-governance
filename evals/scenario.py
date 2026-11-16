@@ -24,7 +24,7 @@ from bastion.config import Settings
 from bastion.db import make_engine, session_scope
 from bastion.gateway.mcp_proxy import DownstreamPool, Gateway
 from bastion.gateway.policy_engine import PolicyLoadError
-from bastion.gateway.redaction import Redactor
+from bastion.gateway.redaction import BaseRedactor
 from bastion.gateway.server import build_mcp_app
 from bastion.llm.governance import BudgetExceeded, GovernanceHook
 from bastion.models import Approval, AuditEvent, PolicyRow, Usage, iso, utcnow
@@ -45,7 +45,7 @@ def check(condition: bool, message: str) -> None:
 
 class Context:
     def __init__(
-        self, workdir: Path, pool: DownstreamPool, redactor: Redactor, demo_db: Path,
+        self, workdir: Path, pool: DownstreamPool, redactor: BaseRedactor, demo_db: Path,
         settings: Settings,
     ) -> None:  # fmt: skip
         self.workdir = workdir
@@ -251,7 +251,7 @@ async def run_agent_scenario(spec: dict[str, Any], settings: Settings, workdir: 
 
 
 async def run_scenario(
-    path: Path, *, pool: DownstreamPool, redactor: Redactor, demo_db: Path, workdir: Path,
+    path: Path, *, pool: DownstreamPool, redactor: BaseRedactor, demo_db: Path, workdir: Path,
     settings: Settings,
 ) -> dict[str, Any]:  # fmt: skip
     spec = yaml.safe_load(path.read_text(encoding="utf-8"))

@@ -33,6 +33,13 @@ def _pack(
             except UnknownAgent as exc:
                 raise HTTPException(404, f"unknown agent '{agent_id}'") from exc
             hit = (time.monotonic(), pack, html, None)
+        if pdf and state.settings.low_memory:
+            raise HTTPException(
+                503,
+                "PDF rendering is switched off on this deployment (low-memory mode: no headless "
+                "browser). The HTML pack is complete; a sample PDF is in the repository under "
+                "docs/samples/.",
+            )
         if pdf and hit[3] is None:
             try:
                 data = html_to_pdf(

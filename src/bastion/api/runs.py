@@ -107,7 +107,10 @@ class RunManager:
             if parked.status in ("running", "interrupted"):  # abandoned by this new run
                 registry.set_run_status(parked.id, "halted")
                 registry.set_run_text(parked.id, "Superseded: a new scenario run was started.")
-        reset_demo_state(self.gateway, self.state.demo_db, actor=f"demo-reset ({actor})")
+        reset_demo_state(
+            self.gateway, self.state.demo_db, actor=f"demo-reset ({actor})",
+            low_memory=self.state.settings.low_memory,
+        )  # fmt: skip
         runner = self.runner()
         run_id = registry.start_run(DEMO_AGENT_ID, scenario.id)
         if approver == "scripted":

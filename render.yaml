@@ -1,0 +1,18 @@
+# Render blueprint: Bastion on the free plan (512 MB RAM, 0.1 CPU, sleeps after 15 idle minutes).
+# Reference implementation; not production; not legal advice.
+services:
+  - type: web
+    name: bastion-agent-governance
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /_stcore/health   # the console; the API stays on loopback in the container
+    autoDeploy: true
+    envVars:
+      - key: BASTION_MODE
+        value: replay                  # recorded model responses: no API key, no cost
+      - key: BASTION_LOW_MEMORY
+        value: "true"                  # pattern PII engine, no headless browser (ADR-010)
+      - key: BASTION_PASSCODE
+        sync: false                    # a secret: set it in the Render dashboard

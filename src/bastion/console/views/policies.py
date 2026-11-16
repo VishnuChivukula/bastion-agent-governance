@@ -1,6 +1,5 @@
 """Policies: the policy in force, its history, diffs, and activating a new version (UC-08)."""
 
-import pandas as pd
 import streamlit as st
 
 from bastion.console import common
@@ -37,22 +36,18 @@ def render() -> None:
         st.code(current["content_yaml"], language="yaml")
 
     with tab_history:
-        st.dataframe(
-            pd.DataFrame(
-                [
-                    {
-                        "Version": v["version"],
-                        "In force": "✔" if v["active"] else "",
-                        "Hash": short_hash(v["content_hash"], 16),
-                        "Note": v["version_note"],
-                        "By": v["created_by"],
-                        "Created": v["created_at"][:19].replace("T", " "),
-                    }
-                    for v in versions
-                ]
-            ),
-            hide_index=True,
-            width="stretch",
+        common.table(
+            [
+                {
+                    "Version": v["version"],
+                    "In force": "✔" if v["active"] else "",
+                    "Hash": short_hash(v["content_hash"], 16),
+                    "Note": v["version_note"],
+                    "By": v["created_by"],
+                    "Created": v["created_at"][:19].replace("T", " "),
+                }
+                for v in versions
+            ]
         )
         numbers = [v["version"] for v in versions]
         if len(numbers) > 1:

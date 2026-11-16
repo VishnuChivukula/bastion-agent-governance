@@ -39,6 +39,7 @@ from bastion.llm.governance import GovernanceHook
 from bastion.models import AuditEvent
 from bastion.seed import DEMO_AGENT_ID, seed_demo_classified
 from demo.data.generate import build as build_demo_data
+from demo.data.generate import restore as restore_demo_data
 from demo.loan_ops_agent.graph import SYSTEM_STANDARD, SYSTEM_TRUSTING, AgentDeps, build_graph
 from demo.loan_ops_agent.scenarios import BY_ID, SCENARIOS, Scenario
 
@@ -341,7 +342,9 @@ class DemoEnvironment:
         self.engine = make_engine(workdir / "bastion.db")
         # UC-01: the demo agent is registered, classified by two agents and signed off.
         self.registration = seed_demo_classified(self.engine, self.settings)
-        self.gateway = Gateway(self.engine, demo_db=self.demo_db)
+        self.gateway = Gateway(
+            self.engine, demo_db=self.demo_db, low_memory=self.settings.low_memory
+        )
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             self.port = sock.getsockname()[1]
@@ -376,9 +379,11 @@ class DemoEnvironment:
         reset_demo_state(self.gateway, self.demo_db)
 
 
-def reset_demo_state(gateway: Gateway, demo_db: Path, actor: str = APPROVER) -> None:
+def reset_demo_state(
+    gateway: Gateway, demo_db: Path, actor: str = APPROVER, *, low_memory: bool = False
+) -> None:
     """Each scenario starts from the same bank data and an agent that is allowed to act."""
-    build_demo_data(demo_db)
+    restore_demo_data(demo_db, isolate=low_memory)
     # Only the demo agent's own switch. The global kill switch is never released by a reset.
     if gateway.killswitch.is_active(DEMO_AGENT_ID):
         gateway.killswitch.reactivate(

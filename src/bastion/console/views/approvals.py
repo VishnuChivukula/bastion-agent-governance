@@ -1,6 +1,5 @@
 """Approvals: decide the actions that policy sends to a human."""
 
-import pandas as pd
 import streamlit as st
 
 from bastion.console import common
@@ -56,23 +55,19 @@ def render() -> None:
     history = [a for a in api.get("/approvals") if a["status"] != "pending"]
     st.subheader("History")
     if history:
-        st.dataframe(
-            pd.DataFrame(
-                [
-                    {
-                        "Approval": a["id"],
-                        "Tool": a["tool"],
-                        "Status": a["status"],
-                        "Decided by": a["decided_by"] or "-",
-                        "Reason": a["reason"] or "-",
-                        "Args hash": short_hash(a["args_hash"]),
-                        "Created": a["created_at"][:19].replace("T", " "),
-                    }
-                    for a in history
-                ]
-            ),
-            hide_index=True,
-            width="stretch",
+        common.table(
+            [
+                {
+                    "Approval": a["id"],
+                    "Tool": a["tool"],
+                    "Status": a["status"],
+                    "Decided by": a["decided_by"] or "-",
+                    "Reason": a["reason"] or "-",
+                    "Args hash": short_hash(a["args_hash"]),
+                    "Created": a["created_at"][:19].replace("T", " "),
+                }
+                for a in history
+            ]
         )
         st.caption(
             "`approved` = a grant that has not been used · `consumed` = the identical call ran "

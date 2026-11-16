@@ -1,6 +1,5 @@
 """Red-Team: the eval scoreboard and every case behind it."""
 
-import pandas as pd
 import streamlit as st
 
 from bastion.console import common
@@ -51,20 +50,16 @@ def render() -> None:
         col.metric(SUITES.get(suite, suite), f"{count['passed']} / {count['total']}")
 
     st.subheader("Thresholds")
-    st.dataframe(
-        pd.DataFrame(
-            [
-                {
-                    "Metric": row["label"],
-                    "Value": _value(row, row["value"]),
-                    "Threshold": f"{row['op']} {_value(row, row['threshold'])}",
-                    "Gate": "pass" if row["pass"] else "FAIL",
-                }
-                for row in result["thresholds"]
-            ]
-        ),
-        hide_index=True,
-        width="stretch",
+    common.table(
+        [
+            {
+                "Metric": row["label"],
+                "Value": _value(row, row["value"]),
+                "Threshold": f"{row['op']} {_value(row, row['threshold'])}",
+                "Gate": "pass" if row["pass"] else "FAIL",
+            }
+            for row in result["thresholds"]
+        ]
     )
 
     failing = [case for case in result["cases"] if not case["pass"]]
@@ -85,23 +80,19 @@ def render() -> None:
         label_visibility="collapsed",
     )
     cases = [case for case in result["cases"] if case["suite"] == choice]
-    st.dataframe(
-        pd.DataFrame(
-            [
-                {
-                    "": "✅" if case["pass"] else "❌",
-                    "ID": case["id"],
-                    "Category": case.get("category", ""),
-                    "Layer": case.get("layer", ""),
-                    "Attack / request": case.get("title") or case["id"],
-                    "Expected": case["expected"],
-                    "What happened": case["actual"],
-                }
-                for case in cases
-            ]
-        ),
-        hide_index=True,
-        width="stretch",
+    common.table(
+        [
+            {
+                "": "✅" if case["pass"] else "❌",
+                "ID": case["id"],
+                "Category": case.get("category", ""),
+                "Layer": case.get("layer", ""),
+                "Attack / request": case.get("title") or case["id"],
+                "Expected": case["expected"],
+                "What happened": case["actual"],
+            }
+            for case in cases
+        ],
         height=min(38 * (len(cases) + 1), 720),
     )
     st.caption(

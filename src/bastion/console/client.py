@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from bastion.api.auth import ACTOR_HEADER, PASSCODE_HEADER
+from bastion.headers import ACTOR_HEADER, PASSCODE_HEADER
 
 
 class ApiError(Exception):

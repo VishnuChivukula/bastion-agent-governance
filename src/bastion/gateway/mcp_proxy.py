@@ -28,7 +28,7 @@ from bastion.gateway.normalize import (
     validate_and_normalise,
 )
 from bastion.gateway.policy_engine import Decision, Downstream, Policy, PolicyLoadError
-from bastion.gateway.redaction import SUPPORTED_ENTITIES, Redactor, get_redactor
+from bastion.gateway.redaction import SUPPORTED_ENTITIES, BaseRedactor, get_redactor
 from bastion.incidents.service import IncidentService
 from bastion.oversight.approvals import ApprovalService
 from bastion.oversight.killswitch import KillSwitchService
@@ -143,10 +143,12 @@ class Gateway:
         engine: Engine,
         *,
         pool: DownstreamPool | None = None,
-        redactor: Redactor | None = None,
+        redactor: BaseRedactor | None = None,
         demo_db: Path | str | None = None,
+        low_memory: bool | None = None,
     ) -> None:
         self.engine = engine
+        self._low_memory = low_memory
         self.audit = AuditLog(engine)
         self.registry = Registry(engine, self.audit)
         self.policies = PolicyStore(engine, self.audit)
@@ -159,9 +161,9 @@ class Gateway:
         self.pool = pool or DownstreamPool({"BASTION_DEMO_DB": str(demo_db)} if demo_db else None)
 
     @property
-    def redactor(self) -> Redactor:
+    def redactor(self) -> BaseRedactor:
         if self._redactor is None:
-            self._redactor = get_redactor()
+            self._redactor = get_redactor(self._low_memory)
         return self._redactor
 
     async def aclose(self) -> None:
