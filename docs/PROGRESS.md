@@ -13,12 +13,12 @@
 | S8 Package + deploy | ☑ | see `git log` (`ci: Dockerfile`) | Dockerfile (python:3.12-slim, uv, non-root), `docker-compose.yml` (`make up`), `railway.json`, `scripts/smoke.py` (`make smoke`, also the container HEALTHCHECK); CI `docker` job builds the image, waits for health and runs UC-03 inside the container. Playwright/Chromium is added to the image in S7 with the feature that needs it |
 | S9a Ship-now polish | ☑ | see `git log` (`fix: reviewer findings`), tag `v0.1.0` | README v1 (doc-writer, facts checked); fresh clone runs `make demo` with no key; release v0.1.0 published; CI green (check, gitleaks, docker) |
 | S5 Registry + assessor | ☑ | see `git log` (`feat: registry classification`) | agent card model, `knowledge/` notes (`[VERIFY]`), Assessor → Reviewer → revise-once graph with JSON-schema structured output, durable sign-off (override needs a reason, `prohibited` blocks, tier template or agent-specific policy, token once), API routes, console Registry page, 12 synthetic cards + 3 seeded errors recorded (28 fixtures); UC-01 passes in replay and opens `make demo`; assessor suite: 12/12 tiers, 3/3 seeded errors caught; 375 tests |
-| S6 Evals + CI gate | ☐ | | |
+| S6 Evals + CI gate | ☑ | see `git log` (`feat: eval suites`) | 25 red-team + 15 benign YAML scenarios with a step interpreter (`evals/scenario.py`), assessor suite, `evals/run.py` with thresholds and `latest.json`, README table updater, `make eval`, CI `eval` job (thresholds + README freshness), `/evals/latest` and the console Red-Team page; gate: 25/25, 15/15, 12/12, 3/3, p95 ≈ 9 ms; 385 tests |
 | S7 Evidence pack | ☐ | | |
 | S9b Showcase | ☐ | | |
 
 ## Next exact step
-S6: `evals/redteam/*.yaml` (RT-01..RT-25), `evals/benign/*.yaml` (B-01..B-15), `evals/run.py` (suites A/B through the real gateway, suite C via `evals/assessor_suite.py`), `evals/thresholds.yaml`, `evals/results/latest.json`, `scripts/update_readme_results.py`, `make eval`, CI `eval` job, console Red-Team page. Then S7, S9b.
+S7: add `jinja2`, `playwright`; `src/bastion/evidence/generator.py` (collect from live DB), `templates/pack.html.j2`, `pdf.py` (Chromium, header = document name, footer = Page X of Y), API routes replacing the 501, console Evidence page (preview + download), `make evidence`, sample PDF at `docs/samples/`, Chromium in the Dockerfile. Then S9b.
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -63,12 +63,16 @@ S6: `evals/redteam/*.yaml` (RT-01..RT-25), `evals/benign/*.yaml` (B-01..B-15), `
 - 2026-11-17 — In replay mode the API and `make demo` seed the demo agent through the real UC-01 flow (fixtures); other modes seed it directly so start-up never calls a model. `seed_demo` (direct) stays for unit tests.
 - 2026-11-17 — `make record` now also records the assessor suite; a full re-record deletes all fixtures first, then records UC-01, the six scenarios and the suite.
 - 2026-11-17 — Gold tiers live in `evals/assessor/gold.yaml`, apart from the cards, so the Assessor never sees them.
+- 2026-11-17 — S6: red-team and benign scenarios are declarative YAML run by one interpreter against a real gateway with no model; three scenarios replay recorded agent runs. Injection cases RT-02..RT-04 test the gateway with the call an injected agent would make — the gateway must hold regardless of model behaviour, and it keeps CI deterministic without recording more fixtures.
+- 2026-11-17 — The README results table shows only machine-independent values (counts, rates, pass/fail; "under 50 ms" rather than the measured p95) so CI can require it to be up to date with `git diff --exit-code`. Exact timings are in `evals/results/latest.json`.
+- 2026-11-17 — A unit test weakens the policy (export allowed) and asserts RT-19 then fails — evidence that the suite detects a broken control, not only that it passes.
 
 ## Human actions needed
 - **Railway deploy** (`kit-local/START_HERE.md` step 7): create the project from the GitHub repo (it picks up `railway.json`), set `BASTION_PASSCODE` to a value of your choice (leave `ANTHROPIC_API_KEY` unset: replay mode), generate a public domain, then paste the URL with `prompts/DEPLOY_DONE.md`. Not blocking: the remaining slices continue without it.
 - Review `docs/VERIFY.md` (after S9b consolidates it).
 
 ## Deferred / known gaps
+- One `make check` run failed once during S5 and passed on every rerun and in CI; the failing test was not captured. Treat as a possible intermittent test (timing-sensitive candidates: the 50 ms latency test, console tests against the live test server).
 - Reviewer P2/P3 left open: failed gateway logins (`auth_failed`) are audited one event per attempt (not throttled); a parked run whose approval expires stays `interrupted` until the next scenario run supersedes it; if a passcode holder decides a scripted run's approval in the instant before the script does, that run is marked failed.
 - Makefile targets `eval`, `evidence`, `gif`, `serve`, `up` print "not yet: Sx" until their slice lands.
 - "Active runs halted" marks run rows as `halted` and blocks the agent's next model or tool call; a run parked at an approval interrupt is not resumed.

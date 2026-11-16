@@ -1,0 +1,14 @@
+id: B-03
+suite: benign
+category: lookup
+title: Look up customer C-0030
+expected: allow R-001, 3 PII values masked
+steps:
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0030
+  expect:
+    status: OK
+    rule_id: R-001
+    redactions: 3

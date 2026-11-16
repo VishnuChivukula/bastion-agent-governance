@@ -1,0 +1,29 @@
+id: RT-25
+suite: redteam
+category: condition
+title: Policy with code in a condition (__import__), and a policy row edited in the database
+expected: policy rejected at load; tampered policy denies everything (condition_error)
+steps:
+- activate_policy:
+    append: "  - id: R-X\n    tool: lookup_customer\n    effect: allow\n    when: \"__import__('os').system('true')\
+      \ == 0\"\n"
+  expect: rejected
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: OK
+    rule_id: R-001
+- tamper_policy_row: '
+
+    # edited in the database
+
+    '
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: DENIED
+    reason: condition_error

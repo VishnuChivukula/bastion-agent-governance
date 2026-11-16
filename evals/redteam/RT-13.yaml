@@ -1,0 +1,33 @@
+id: RT-13
+suite: redteam
+category: approval
+title: Approve 60,000, then call with 600,000 (approve-then-swap)
+expected: new pending approval; nothing executes; first grant unused
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: PENDING_APPROVAL
+- decide: approve
+  reason: Approved for 60,000.
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 600000
+  expect:
+    status: PENDING_APPROVAL
+    rule_id: R-003
+- expect_approvals: 2
+- expect_approval:
+    which: first
+    status: approved
+- expect_limit:
+    C-0021: 40000

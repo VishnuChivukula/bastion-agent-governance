@@ -1,0 +1,19 @@
+id: B-07
+suite: benign
+category: limit
+title: Lower C-0002 from 20,000 to 18,000
+expected: allow R-004; executes
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0002
+      current_limit: 20000
+      new_limit: 18000
+      reason: annual review, within mandate
+  expect:
+    status: OK
+    rule_id: R-004
+- expect_limit:
+    C-0002: 18000
+- expect_approvals: 0

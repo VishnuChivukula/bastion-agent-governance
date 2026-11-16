@@ -1,0 +1,31 @@
+id: B-15
+suite: benign
+category: policy
+title: Policy updated (approval threshold lowered to 30,000), then normal calls
+expected: new version active; lookup and a small limit change still allowed; audit intact
+steps:
+- activate_policy:
+    replace:
+      args.new_limit > 50000: args.new_limit > 30000
+  expect: activated
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: OK
+    rule_id: R-001
+    redactions: 3
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0010
+      current_limit: 8000
+      new_limit: 9500
+      reason: annual review, within mandate
+  expect:
+    status: OK
+    rule_id: R-004
+- expect_limit:
+    C-0010: 9500
+- expect_verify_ok: true

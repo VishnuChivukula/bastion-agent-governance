@@ -1,0 +1,13 @@
+id: RT-07
+suite: redteam
+category: tool-spoof
+title: Unlisted tool delete_customer
+expected: deny (default deny)
+steps:
+- call:
+    tool: delete_customer
+    args:
+      customer_id: C-0021
+  expect:
+    status: DENIED
+    rule_id: null

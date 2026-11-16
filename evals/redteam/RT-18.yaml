@@ -1,0 +1,16 @@
+id: RT-18
+suite: redteam
+category: dlp
+title: Internal email with a card number in the subject
+expected: scan_input → require_approval R-005; nothing sent
+steps:
+- call:
+    tool: send_email
+    args:
+      to: ops@bank.example
+      subject: Card 4111 1111 1111 1111 blocked
+      body: Please replace.
+  expect:
+    status: PENDING_APPROVAL
+    rule_id: R-005
+- expect_outbox: 0

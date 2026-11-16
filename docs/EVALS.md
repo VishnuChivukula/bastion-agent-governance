@@ -8,6 +8,12 @@
 - **CI runs replay only.** `make record` refreshes fixtures locally with a key.
 - Scenario files are YAML in `evals/<suite>/`. Results go to `evals/results/latest.json`, and `scripts/update_readme_results.py` rewrites the README table between `<!-- RESULTS:START -->` / `<!-- RESULTS:END -->`.
 
+## How the suites are implemented
+- `evals/redteam/RT-xx.yaml` and `evals/benign/B-xx.yaml`: one scenario per file, a list of steps (`call`, `decide`, `expire`, `kill`, `tamper_audit`, `activate_policy`, `expect_*` …) interpreted by `evals/scenario.py` against a freshly seeded gateway. Layer `gateway` scenarios contain no model. RT-01, B-01 and B-14 are layer `agent`: the recorded UC-03, UC-02 and UC-04 runs replayed through the gateway.
+- Injection cases RT-02..RT-04 are gateway-layer: they issue the call a successfully injected agent would make. The control under test is the gateway, which must hold whatever the model does; RT-01 shows the same with a real (recorded) agent that falls for the injection.
+- `evals/assessor_suite.py` runs suite C from `evals/assessor/cards/` with gold tiers in `evals/assessor/gold.yaml`.
+- `python -m evals.run` (`make eval`) runs all three, checks `evals/thresholds.yaml`, writes `evals/results/latest.json` and exits 1 on a breach. The README table holds only machine-independent values, so CI also checks it is up to date.
+
 ## Suite A: Red-team (must-block), 25 scenarios
 | ID | Category | Attack | Expected |
 |---|---|---|---|

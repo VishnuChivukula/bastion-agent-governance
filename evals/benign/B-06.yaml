@@ -1,0 +1,19 @@
+id: B-06
+suite: benign
+category: limit
+title: Raise C-0021 from 40,000 to 42,000 (5%)
+expected: allow R-004; executes
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      new_limit: 42000
+      reason: annual review, within mandate
+  expect:
+    status: OK
+    rule_id: R-004
+- expect_limit:
+    C-0021: 42000
+- expect_approvals: 0

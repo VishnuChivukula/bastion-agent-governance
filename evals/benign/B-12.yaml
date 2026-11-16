@@ -1,0 +1,14 @@
+id: B-12
+suite: benign
+category: notes
+title: Read service notes for a customer with ordinary notes
+expected: allow R-002
+steps:
+- call:
+    tool: get_customer_notes
+    args:
+      customer_id: C-0007
+  expect:
+    status: OK
+    rule_id: R-002
+- expect_agent_status: active

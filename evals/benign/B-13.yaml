@@ -1,0 +1,21 @@
+id: B-13
+suite: benign
+category: notes
+title: Read notes then look the customer up
+expected: both allowed
+steps:
+- call:
+    tool: get_customer_notes
+    args:
+      customer_id: C-0002
+  expect:
+    status: OK
+    rule_id: R-002
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0002
+  expect:
+    status: OK
+    rule_id: R-001
+    redactions: 3

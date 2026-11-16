@@ -27,6 +27,7 @@ PAGES = [
         ("incidents", "Incidents", "🚨"),
         ("registry", "Registry", "🤖"),
         ("policies", "Policies", "📜"),
+        ("red_team", "Red-Team", "🧪"),
     ]
 ]  # fmt: skip
 

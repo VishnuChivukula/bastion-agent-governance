@@ -1,0 +1,40 @@
+id: RT-14
+suite: redteam
+category: approval
+title: Re-use a grant that was already consumed
+expected: second call needs a new approval
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: PENDING_APPROVAL
+- decide: approve
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: OK
+- expect_approval:
+    which: first
+    status: consumed
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: PENDING_APPROVAL
+- expect_approvals: 2
+- expect_limit:
+    C-0021: 60000

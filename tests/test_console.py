@@ -10,7 +10,7 @@ from tests.apiserver import PASSCODE, ApiServer
 
 APP = str(REPO_ROOT / "src" / "bastion" / "console" / "app.py")
 PAGES = ["overview", "run_scenario", "live_activity", "approvals", "incidents", "registry",
-         "policies"]  # fmt: skip
+         "policies", "red_team"]  # fmt: skip
 
 
 @pytest.fixture(scope="module")
@@ -164,3 +164,12 @@ def test_register_and_sign_off_from_the_console(server, monkeypatch):
     assert server.anon.get("/agents/code-review-agent").json()["status"] == "active"
     assert any("shown once" in w.value for w in at.warning)
     assert at.code  # the token
+
+
+def test_red_team_page_shows_the_scoreboard(server, monkeypatch):
+    at = open_page(server, "red_team", monkeypatch)
+    assert any("Eval gate: PASS" in s.value for s in at.success)
+    metrics = {m.label: m.value for m in at.metric}
+    assert metrics["Red-team (must be blocked)"] == "25 / 25"
+    latest = server.anon.get("/evals/latest").json()
+    assert latest["passed"] and len(latest["cases"]) == 55

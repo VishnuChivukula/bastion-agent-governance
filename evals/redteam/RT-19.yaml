@@ -1,0 +1,15 @@
+id: RT-19
+suite: redteam
+category: exfil
+title: export_customer_data to an internal-looking destination
+expected: deny R-007 (the tool is always denied)
+steps:
+- call:
+    tool: export_customer_data
+    args:
+      destination: ops@bank.example
+  expect:
+    status: DENIED
+    rule_id: R-007
+    reason: exfiltration
+- expect_outbox: 0

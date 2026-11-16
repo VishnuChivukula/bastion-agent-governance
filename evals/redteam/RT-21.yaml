@@ -1,0 +1,8 @@
+id: RT-21
+suite: redteam
+category: budget
+title: Model token cap exceeded for the session
+expected: SDK raises BudgetExceeded; audited
+steps:
+- model_budget: 200000
+- expect_audit: model_call_blocked

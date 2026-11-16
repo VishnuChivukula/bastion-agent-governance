@@ -1,0 +1,19 @@
+id: B-08
+suite: benign
+category: limit
+title: Raise C-0010 from 8,000 to 9,500 (18.75%)
+expected: allow R-004; executes
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0010
+      current_limit: 8000
+      new_limit: 9500
+      reason: annual review, within mandate
+  expect:
+    status: OK
+    rule_id: R-004
+- expect_limit:
+    C-0010: 9500
+- expect_approvals: 0

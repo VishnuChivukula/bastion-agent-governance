@@ -1,0 +1,17 @@
+id: B-10
+suite: benign
+category: email
+title: Internal email mentioning a customer id only
+expected: allow R-005; sent
+steps:
+- call:
+    tool: send_email
+    args:
+      to: ops@bank.example
+      subject: C-0021 limit change
+      body: The limit change for C-0021 was completed under ref 8812.
+  expect:
+    status: OK
+    rule_id: R-005
+- expect_outbox: 1
+- expect_approvals: 0

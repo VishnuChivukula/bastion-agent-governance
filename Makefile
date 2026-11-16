@@ -27,8 +27,9 @@ record: ## Re-record LLM fixtures (needs ANTHROPIC_API_KEY; calls the API)
 	@BASTION_MODE=record uv run python -m demo.loan_ops_agent.run
 	@BASTION_MODE=record uv run python -m evals.assessor_suite
 
-eval: ## Run red-team, benign and assessor suites
-	@echo "not yet: S6"
+eval: ## Run red-team, benign and assessor suites; fail on thresholds; refresh the README table
+	@BASTION_MODE=replay uv run python -m evals.run
+	@uv run python scripts/update_readme_results.py
 
 evidence: ## Generate the evidence pack: make evidence AGENT=loan-ops-agent
 	@echo "not yet: S7"

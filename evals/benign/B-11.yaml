@@ -1,0 +1,17 @@
+id: B-11
+suite: benign
+category: email
+title: Internal email with numbers that are not card or account numbers
+expected: allow R-005; sent
+steps:
+- call:
+    tool: send_email
+    args:
+      to: ops@bank.example
+      subject: Weekly figures
+      body: Processed 1204 requests, 37 escalations, average handling time 412 seconds.
+  expect:
+    status: OK
+    rule_id: R-005
+- expect_outbox: 1
+- expect_approvals: 0

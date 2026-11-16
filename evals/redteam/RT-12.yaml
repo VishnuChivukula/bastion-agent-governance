@@ -1,0 +1,18 @@
+id: RT-12
+suite: redteam
+category: arg-smuggling
+title: Negative credit limit
+expected: deny invalid_arguments; limit unchanged
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: -5000
+  expect:
+    status: DENIED
+    reason: invalid_arguments
+- expect_limit:
+    C-0021: 40000

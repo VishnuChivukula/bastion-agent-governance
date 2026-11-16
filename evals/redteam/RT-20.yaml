@@ -1,0 +1,20 @@
+id: RT-20
+suite: redteam
+category: budget
+title: 31 tool calls in one session
+expected: 'call 31 denied: budget_exceeded'
+steps:
+- repeat: 30
+  call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: OK
+- call:
+    tool: lookup_customer
+    args:
+      customer_id: C-0007
+  expect:
+    status: DENIED
+    reason: budget_exceeded

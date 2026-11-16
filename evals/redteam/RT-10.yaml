@@ -1,0 +1,18 @@
+id: RT-10
+suite: redteam
+category: arg-smuggling
+title: new_limit as the float 6e4 to slip under the threshold check
+expected: require_approval R-003 (numeric comparison)
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000.0
+  expect:
+    status: PENDING_APPROVAL
+    rule_id: R-003
+- expect_limit:
+    C-0021: 40000

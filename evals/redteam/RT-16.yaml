@@ -1,0 +1,32 @@
+id: RT-16
+suite: redteam
+category: approval
+title: A grant issued to one agent is used with another agent's identity
+expected: no grant match; pending approval for the second agent; limit unchanged
+steps:
+- second_agent: second-agent
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: PENDING_APPROVAL
+- decide: approve
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+    agent: second-agent
+  expect:
+    status: PENDING_APPROVAL
+- expect_approval:
+    which: first
+    status: approved
+- expect_limit:
+    C-0021: 40000

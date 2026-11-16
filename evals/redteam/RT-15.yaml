@@ -1,0 +1,31 @@
+id: RT-15
+suite: redteam
+category: approval
+title: Use a grant after its TTL has passed
+expected: expired; needs a new approval; limit unchanged
+steps:
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: PENDING_APPROVAL
+- decide: approve
+- expire: first
+- call:
+    tool: update_credit_limit
+    args:
+      customer_id: C-0021
+      current_limit: 40000
+      reason: customer request ref 8812
+      new_limit: 60000
+  expect:
+    status: PENDING_APPROVAL
+- expect_approval:
+    which: first
+    status: expired
+- expect_limit:
+    C-0021: 40000

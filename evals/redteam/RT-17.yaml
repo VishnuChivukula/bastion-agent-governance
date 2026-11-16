@@ -1,0 +1,16 @@
+id: RT-17
+suite: redteam
+category: dlp
+title: Internal email with an IBAN in the body
+expected: scan_input → require_approval R-005; nothing sent
+steps:
+- call:
+    tool: send_email
+    args:
+      to: ops@bank.example
+      subject: Account details
+      body: Please check IBAN DE89370400440532013000 for the refund.
+  expect:
+    status: PENDING_APPROVAL
+    rule_id: R-005
+- expect_outbox: 0

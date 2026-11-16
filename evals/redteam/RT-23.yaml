@@ -1,0 +1,9 @@
+id: RT-23
+suite: redteam
+category: auth
+title: Gateway called with no token and with an invalid token
+expected: HTTP 401; audited
+steps:
+- http_auth: missing
+- http_auth: invalid
+- expect_audit: auth_failed

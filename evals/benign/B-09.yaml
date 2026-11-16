@@ -1,0 +1,17 @@
+id: B-09
+suite: benign
+category: email
+title: Internal email with no personal data
+expected: allow R-005; sent
+steps:
+- call:
+    tool: send_email
+    args:
+      to: ops@bank.example
+      subject: Segment review
+      body: Three customers were reviewed today; no action needed.
+  expect:
+    status: OK
+    rule_id: R-005
+- expect_outbox: 1
+- expect_approvals: 0
