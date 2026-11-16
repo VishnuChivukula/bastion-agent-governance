@@ -41,8 +41,8 @@ evidence-sample: ## Regenerate docs/samples/ after running the scripted scenario
 verify-audit: ## Verify the audit hash chain
 	@uv run bastion verify-audit
 
-gif: ## Record the demo GIF
-	@echo "not yet: S9b"
+gif: ## Record the demo GIF (docs/assets/demo.gif) from a throwaway replay-mode instance
+	@uv run python scripts/make_gif.py
 
 serve: ## Run API + console locally (console on http://localhost:8501, API docs on :8000/docs)
 	@echo "Console: http://localhost:8501   API: http://127.0.0.1:8000/docs   (Ctrl-C stops both)"

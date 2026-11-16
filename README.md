@@ -9,6 +9,9 @@
 > Reference implementation; not production; not legal advice. All data is synthetic.
 
 <!-- DEMO-GIF -->
+![Bastion console: classification, a blocked prompt injection, an argument-bound approval, the kill switch, the evidence pack and the red-team scoreboard](docs/assets/demo.gif)
+
+<sub>Recorded by `make gif` from a replay-mode instance: no API key, synthetic data.</sub>
 
 ## Why
 
@@ -211,10 +214,13 @@ Obligations differ for providers and deployers under the EU AI Act; a bank using
 
 ## Roadmap
 
-Planned for v0.2. None of these exists today.
+Not built. Candidates for a next version, in rough order of value:
 
-- Demo GIF.
-- Threat model document.
+- An external anchor for the audit chain head (for example a signed, timestamped checkpoint), so truncation is detectable.
+- Real identities: SSO and role-based access for approvers instead of one shared passcode, with four-eyes approval for the largest actions.
+- Scenario runs and classification for agents other than the demo agent, and policy rules with tool wildcards.
+- A second agent framework and a non-Anthropic model behind the same gateway, to show the enforcement point is model-agnostic in practice.
+- PostgreSQL as an alternative store, and metrics export.
 
 ## Repository guide
 
@@ -226,6 +232,11 @@ Planned for v0.2. None of these exists today.
 | [`docs/EVALS.md`](docs/EVALS.md) | Eval suites and CI thresholds |
 | [`docs/GOVERNANCE_MAPPING.md`](docs/GOVERNANCE_MAPPING.md) | Regulatory mapping and the VERIFY rule |
 | [`docs/SLICES.md`](docs/SLICES.md) | Build order |
+| [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | STRIDE over the agent, gateway and tool path, with the red-team case for each threat |
+| [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | A 3-minute and a 10-minute demo, with the questions you will get |
+| [`docs/SHOWCASE.md`](docs/SHOWCASE.md) | Talking points and a pre-sales narrative |
+| [`docs/VERIFY.md`](docs/VERIFY.md) | Every regulatory reference in the repo, awaiting human verification |
+| [`docs/samples/`](docs/samples/) | A generated evidence pack (HTML and PDF) |
 | [`docs/PROGRESS.md`](docs/PROGRESS.md) | Current state |
 | [`docs/adr/`](docs/adr/) | Architecture decision records |
 

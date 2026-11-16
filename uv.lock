@@ -121,6 +121,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "pillow" },
     { name = "pre-commit" },
     { name = "pypdf" },
     { name = "pytest" },
@@ -155,6 +156,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "pillow", specifier = ">=13.0.0" },
     { name = "pre-commit", specifier = ">=3.7" },
     { name = "pypdf", specifier = ">=7.1.0" },
     { name = "pytest", specifier = ">=8" },
