@@ -10,7 +10,7 @@ from tests.apiserver import PASSCODE, ApiServer
 
 APP = str(REPO_ROOT / "src" / "bastion" / "console" / "app.py")
 PAGES = ["overview", "run_scenario", "live_activity", "approvals", "incidents", "registry",
-         "policies", "red_team"]  # fmt: skip
+         "policies", "red_team", "evidence"]  # fmt: skip
 
 
 @pytest.fixture(scope="module")
@@ -173,3 +173,14 @@ def test_red_team_page_shows_the_scoreboard(server, monkeypatch):
     assert metrics["Red-team (must be blocked)"] == "25 / 25"
     latest = server.anon.get("/evals/latest").json()
     assert latest["passed"] and len(latest["cases"]) == 55
+
+
+def test_evidence_page_generates_a_pack_with_downloads(server, monkeypatch):
+    at = open_page(server, "evidence", monkeypatch)
+    at.selectbox[0].set_value("loan-ops-agent").run()
+    at.button[0].click().run()
+    assert not at.exception
+    assert any("hash chain verified" in s.value for s in at.success)
+    assert any("Page X of Y" in c.value for c in at.caption)
+    metrics = {m.label: m.value for m in at.metric}
+    assert metrics["Risk tier"] == "high"

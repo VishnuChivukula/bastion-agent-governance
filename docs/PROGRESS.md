@@ -14,11 +14,11 @@
 | S9a Ship-now polish | ☑ | see `git log` (`fix: reviewer findings`), tag `v0.1.0` | README v1 (doc-writer, facts checked); fresh clone runs `make demo` with no key; release v0.1.0 published; CI green (check, gitleaks, docker) |
 | S5 Registry + assessor | ☑ | see `git log` (`feat: registry classification`) | agent card model, `knowledge/` notes (`[VERIFY]`), Assessor → Reviewer → revise-once graph with JSON-schema structured output, durable sign-off (override needs a reason, `prohibited` blocks, tier template or agent-specific policy, token once), API routes, console Registry page, 12 synthetic cards + 3 seeded errors recorded (28 fixtures); UC-01 passes in replay and opens `make demo`; assessor suite: 12/12 tiers, 3/3 seeded errors caught; 375 tests |
 | S6 Evals + CI gate | ☑ | see `git log` (`feat: eval suites`) | 25 red-team + 15 benign YAML scenarios with a step interpreter (`evals/scenario.py`), assessor suite, `evals/run.py` with thresholds and `latest.json`, README table updater, `make eval`, CI `eval` job (thresholds + README freshness), `/evals/latest` and the console Red-Team page; gate: 25/25, 15/15, 12/12, 3/3, p95 ≈ 9 ms; 385 tests |
-| S7 Evidence pack | ☐ | | |
+| S7 Evidence pack | ☑ | see `git log` (`feat: evidence pack`) | `evidence/generator.py` collects from the live DB (card, classification and sign-off, policy and hash, oversight, robustness, incidents, usage, audit integrity, framework mapping filtered to evidence present, limitations); Jinja2 HTML; Chromium PDF with the document name in the header and `Page X of Y` in the footer; API (`/agents/{id}/evidence`, `.html`, `.pdf`), console Evidence page, `make evidence`, `make evidence-sample`; sample committed in `docs/samples/`; UC-09 passes; 398 tests |
 | S9b Showcase | ☐ | | |
 
 ## Next exact step
-S7: add `jinja2`, `playwright`; `src/bastion/evidence/generator.py` (collect from live DB), `templates/pack.html.j2`, `pdf.py` (Chromium, header = document name, footer = Page X of Y), API routes replacing the 501, console Evidence page (preview + download), `make evidence`, sample PDF at `docs/samples/`, Chromium in the Dockerfile. Then S9b.
+S9b: `scripts/make_gif.py` + `make gif` → `docs/assets/demo.gif` in the README; `docs/DEMO_SCRIPT.md`, `docs/THREAT_MODEL.md`, `docs/SHOWCASE.md` (doc-writer); consolidate `docs/VERIFY.md`; reviewer on the whole repo, fix findings; tick the SPEC §8 checklist here; `gh release create v0.2.0 --generate-notes`.
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -66,6 +66,10 @@ S7: add `jinja2`, `playwright`; `src/bastion/evidence/generator.py` (collect fro
 - 2026-11-17 — S6: red-team and benign scenarios are declarative YAML run by one interpreter against a real gateway with no model; three scenarios replay recorded agent runs. Injection cases RT-02..RT-04 test the gateway with the call an injected agent would make — the gateway must hold regardless of model behaviour, and it keeps CI deterministic without recording more fixtures.
 - 2026-11-17 — The README results table shows only machine-independent values (counts, rates, pass/fail; "under 50 ms" rather than the measured p95) so CI can require it to be up to date with `git diff --exit-code`. Exact timings are in `evals/results/latest.json`.
 - 2026-11-17 — A unit test weakens the policy (export allowed) and asserts RT-19 then fails — evidence that the suite detects a broken control, not only that it passes.
+- 2026-11-17 — S7: evidence routes are open (read-only) like the rest of the read API, so a visitor of the public demo can download the pack; rendering is serialised and cached for 30 s per agent because the PDF starts a headless browser. Each generation writes an `evidence_generated` audit event.
+- 2026-11-17 — The framework mapping in the pack lists only capabilities for which the pack holds evidence and names the omitted ones — an auditor should not read a mapping row as proof that something happened.
+- 2026-11-17 — `make evidence` reads the local database (seeding the demo agent if it is empty); `make evidence-sample` first runs the scripted scenarios in a throwaway environment, which is how `docs/samples/` is produced.
+- 2026-11-17 — `make setup` and CI install Playwright's Chromium; the Docker image installs it with system libraries (`PLAYWRIGHT_BROWSERS_PATH=/opt/playwright`). Without Chromium the HTML pack still works and the PDF route answers 503.
 
 ## Human actions needed
 - **Railway deploy** (`kit-local/START_HERE.md` step 7): create the project from the GitHub repo (it picks up `railway.json`), set `BASTION_PASSCODE` to a value of your choice (leave `ANTHROPIC_API_KEY` unset: replay mode), generate a public domain, then paste the URL with `prompts/DEPLOY_DONE.md`. Not blocking: the remaining slices continue without it.

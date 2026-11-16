@@ -3,14 +3,15 @@
 AGENT ?= loan-ops-agent
 export BASTION_MODE ?= replay
 
-.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke
+.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke evidence-sample
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
 
-setup: ## Install dependencies and git hooks
+setup: ## Install dependencies, git hooks and the headless browser used for PDFs
 	uv sync
 	uv run pre-commit install
+	uv run playwright install chromium
 
 check: ## Lint, format check and tests (run before every commit)
 	uv run ruff check .
@@ -31,8 +32,11 @@ eval: ## Run red-team, benign and assessor suites; fail on thresholds; refresh t
 	@BASTION_MODE=replay uv run python -m evals.run
 	@uv run python scripts/update_readme_results.py
 
-evidence: ## Generate the evidence pack: make evidence AGENT=loan-ops-agent
-	@echo "not yet: S7"
+evidence: ## Evidence pack (HTML + PDF) from the local database: make evidence AGENT=loan-ops-agent
+	@uv run bastion evidence --agent $(AGENT) --out data/evidence
+
+evidence-sample: ## Regenerate docs/samples/ after running the scripted scenarios (replay)
+	@uv run bastion evidence --agent $(AGENT) --out docs/samples --demo
 
 verify-audit: ## Verify the audit hash chain
 	@uv run bastion verify-audit

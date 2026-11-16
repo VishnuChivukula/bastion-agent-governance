@@ -20,6 +20,8 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --locked
+      - name: Headless Chromium for the evidence pack PDF
+        run: uv run playwright install --with-deps chromium
       - run: make check
 
   eval:

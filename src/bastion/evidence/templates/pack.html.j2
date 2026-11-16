@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ p.document_name }}</title>
+<style>
+  :root { --ink: #1a1f2b; --muted: #5b6475; --line: #d5d9e2; --soft: #f4f6fa; --accent: #1f4e8c;
+          --ok: #1b7a43; --bad: #b3261e; --warn: #9a6700; }
+  * { box-sizing: border-box; }
+  body { font-family: Helvetica, Arial, sans-serif; color: var(--ink); font-size: 10.5pt;
+         line-height: 1.45; margin: 0 auto; max-width: 900px; padding: 24px 16px; background: #fff; }
+  h1 { font-size: 22pt; margin: 0 0 4px; color: var(--accent); }
+  h2 { font-size: 13.5pt; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 1.5px solid var(--accent);
+       break-after: avoid; }
+  h3 { font-size: 11pt; margin: 14px 0 6px; break-after: avoid; }
+  p { margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 12px; font-size: 9.5pt; }
+  th, td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top;
+           overflow-wrap: anywhere; }
+  th { background: var(--soft); font-weight: 600; }
+  tr { break-inside: avoid; }
+  code, .mono { font-family: Menlo, Consolas, monospace; font-size: 8.5pt; overflow-wrap: anywhere; }
+  .muted { color: var(--muted); }
+  .cover { border: 1px solid var(--line); background: var(--soft); padding: 16px 18px; border-radius: 6px; }
+  .cover table { margin: 10px 0 0; } .cover td, .cover th { border: none; padding: 3px 8px 3px 0; background: none; }
+  .cover th { width: 180px; color: var(--muted); font-weight: 500; }
+  .notice { border-left: 4px solid var(--warn); background: #fff8e6; padding: 8px 12px; margin: 12px 0;
+            break-inside: avoid; }
+  .ok { color: var(--ok); font-weight: 600; } .bad { color: var(--bad); font-weight: 600; }
+  .tag { display: inline-block; border: 1px solid var(--line); border-radius: 10px; padding: 0 7px;
+         font-size: 8.5pt; background: #fff; }
+  .box { border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
+  ul { margin: 6px 0; padding-left: 20px; } li { margin: 2px 0; }
+  .verify { color: var(--warn); font-size: 8.5pt; white-space: nowrap; }
+</style>
+</head>
+<body>
+{% set reg = p.registration %}
+{% macro verify() %}<span class="verify">[VERIFY]</span>{% endmacro %}
+
+<div class="cover">
+  <h1>{{ p.document_name }}</h1>
+  <div class="muted">Governance evidence for one AI agent, generated from Bastion's live records.</div>
+  <table>
+    <tr><th>Agent</th><td>{{ p.agent.name }} (<code>{{ p.agent.id }}</code>)</td></tr>
+    <tr><th>Owner</th><td>{{ p.agent.owner }}</td></tr>
+    <tr><th>Status / risk tier</th><td>{{ p.agent.status }} / {{ p.agent.tier or "not signed off" }}</td></tr>
+    <tr><th>Policy in force</th><td>{% if p.policy %}version {{ p.policy.version }} · sha256 <code>{{ p.policy.hash }}</code>{% else %}none (every tool call is denied){% endif %}</td></tr>
+    <tr><th>Audit integrity</th><td>{% if p.records.chain_ok %}<span class="ok">hash chain verified</span> over {{ p.records.events_total }} events{% else %}<span class="bad">HASH CHAIN BROKEN at event #{{ p.records.first_broken_seq }}</span>{% endif %}</td></tr>
+    <tr><th>Generated</th><td>{{ p.generated_at | when }} · Bastion v{{ p.bastion_version }}</td></tr>
+  </table>
+</div>
+
+<div class="notice"><strong>{{ p.disclaimer }}</strong> This pack supports evidence for obligations; it does not make a system compliant. Every regulatory reference is marked {{ verify() }}: a paraphrased starting point that has not been checked against the primary source. All data is synthetic.</div>
+
+<h2>1. System description</h2>
+{% if reg and reg.card %}
+{% set c = reg.card %}
+<table>
+  <tr><th style="width: 190px">Business purpose</th><td>{{ c.business_purpose }}</td></tr>
+  <tr><th>Deployment context</th><td>{{ c.deployment_context }}</td></tr>
+  <tr><th>Affected people</th><td>{{ c.affected_users }}</td></tr>
+  <tr><th>Data categories</th><td>{{ c.data_categories | join("; ") }}</td></tr>
+  <tr><th>Personal data</th><td>{{ "yes" if c.personal_data else "no" }} · special categories: {{ "yes" if c.special_category_data else "no" }}</td></tr>
+  <tr><th>Tools requested</th><td>{% for t in c.tools_requested %}<code>{{ t }}</code>{{ ", " if not loop.last }}{% endfor %}</td></tr>
+  <tr><th>Autonomy level</th><td>{{ c.autonomy_level }}</td></tr>
+  <tr><th>Models used</th><td>{{ c.models_used | join(", ") }}</td></tr>
+</table>
+<p class="muted">Source: the agent card submitted by the owner at registration.</p>
+{% else %}
+<p>No agent card is on record for this agent.</p>
+{% endif %}
+
+<h2>2. Risk classification and sign-off</h2>
+{% if reg and reg.classification %}
+{% set cl = reg.classification %}
+<div class="box">
+  <h3>Assessor agent: proposed tier <span class="tag">{{ cl.assessment.tier }}</span> · confidence {{ "%.2f" | format(cl.assessment.confidence) }}</h3>
+  <p>{{ cl.assessment.rationale }}</p>
+  <p><strong>Provisions cited by the agent:</strong></p>
+  <ul>{% for item in cl.assessment.cited_provisions %}<li>{{ item }}</li>{% endfor %}</ul>
+</div>
+<div class="box">
+  <h3>Reviewer agent: {{ cl.review.verdict }}s · would sign off <span class="tag">{{ cl.review.recommended_tier }}</span></h3>
+  <p>{{ cl.review.summary }}</p>
+  {% if cl.review.challenges %}<ul>{% for item in cl.review.challenges %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+</div>
+{% if cl.revised %}
+<div class="box">
+  <h3>Assessor agent, revised once after the critique: <span class="tag">{{ cl.revised.tier }}</span></h3>
+  <p>{{ cl.revised.rationale }}</p>
+</div>
+{% endif %}
+{% if reg.unresolved_disagreement %}<p class="bad">The two agents still disagreed after the one allowed revision. The human decided.</p>{% endif %}
+<table>
+  <tr><th style="width: 190px">Tier proposed</th><td>{{ reg.proposed_tier }}</td></tr>
+  <tr><th>Tier signed off</th><td>{{ reg.final_tier or "not yet signed off" }}</td></tr>
+  <tr><th>Signed off by</th><td>{{ reg.signed_off_by or "-" }} · {{ reg.signed_at | when }}</td></tr>
+  <tr><th>Override</th><td>{% if reg.override_reason %}yes: {{ reg.override_reason }}{% else %}no (proposed tier accepted){% endif %}</td></tr>
+</table>
+<p class="muted">The tier is decision support produced by two AI agents from paraphrased notes; the human sign-off is the decision of record. Obligations under the EU AI Act differ for providers and deployers; an organisation using a third-party agent is typically a deployer {{ verify() }}.</p>
+{% if cl.assessment.open_questions %}
+<h3>Open questions raised for the owner</h3>
+<ul>{% for item in (cl.revised or cl.assessment).open_questions %}<li>{{ item }}</li>{% endfor %}</ul>
+{% endif %}
+{% else %}
+<p>No classification is on record: the agent was created directly, without the Assessor and Reviewer flow. Tier on the agent record: {{ p.agent.tier or "none" }}.</p>
+{% endif %}
+
+<h2>3. Controls in force</h2>
+{% if p.policy %}
+<p>Policy version {{ p.policy.version }} of {{ p.policy.versions }}, activated by {{ p.policy.activated_by }} on {{ p.policy.activated_at | when }}{% if p.policy.note %} ("{{ p.policy.note }}"){% endif %}. Rules are evaluated in order, the first match wins, and a tool call that matches no rule is denied. Every gateway decision records this hash and the rule that fired.</p>
+<p class="mono">sha256 {{ p.policy.hash }}</p>
+{% if not p.policy.valid %}<p class="bad">The stored policy text does not parse; the gateway denies every call.</p>{% endif %}
+<table>
+  <colgroup><col style="width: 8%"><col style="width: 19%"><col style="width: 13%"><col style="width: 28%"><col style="width: 11%"><col style="width: 21%"></colgroup>
+  <tr><th>Rule</th><th>Tool</th><th>Effect</th><th>Condition</th><th>Category</th><th>Data controls</th></tr>
+  {% for r in p.policy.rules %}
+  <tr><td>{{ r.id }}</td><td><code>{{ r.tool }}</code></td><td>{{ r.effect }}</td><td><code>{{ r.when }}</code></td><td>{{ r.category }}</td><td>{{ r.data }}</td></tr>
+  {% else %}
+  <tr><td colspan="6">No tool rules: every tool call is denied (default deny).</td></tr>
+  {% endfor %}
+</table>
+{% if p.policy.incident_rules %}
+<table>
+  <tr><th>Incident rule</th><th>Opens when</th><th>Severity</th><th>Automatic action</th></tr>
+  {% for r in p.policy.incident_rules %}<tr><td>{{ r.id }}</td><td><code>{{ r.when }}</code></td><td>{{ r.severity }}</td><td>{{ r.action }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+{% else %}
+<p>No policy is in force. The gateway denies every tool call from this agent.</p>
+{% endif %}
+
+<h2>4. Human oversight</h2>
+<table>
+  <tr><th style="width: 50%">Tool calls decided by the gateway</th><td>{{ p.oversight.decisions_total }}</td></tr>
+  <tr><th>Allowed and executed</th><td>{{ p.oversight.decisions.get("OK", 0) }}</td></tr>
+  <tr><th>Denied</th><td>{{ p.oversight.decisions.get("DENIED", 0) }}</td></tr>
+  <tr><th>Held for human approval</th><td>{{ p.oversight.decisions.get("PENDING_APPROVAL", 0) }}</td></tr>
+  <tr><th>Tool errors passed back</th><td>{{ p.oversight.decisions.get("TOOL_ERROR", 0) }}</td></tr>
+  <tr><th>PII values masked before the agent saw them</th><td>{{ p.oversight.redactions }}</td></tr>
+</table>
+<h3>Approvals</h3>
+{% if p.oversight.approvals_total %}
+<table>
+  <tr><th>Requested</th><th>Approved, unused</th><th>Approved and used once</th><th>Rejected</th><th>Expired</th><th>Revoked</th><th>Still pending</th><th>Median time to decide</th></tr>
+  <tr><td>{{ p.oversight.approvals_total }}</td><td>{{ p.oversight.approvals.get("approved", 0) }}</td><td>{{ p.oversight.approvals.get("consumed", 0) }}</td><td>{{ p.oversight.approvals.get("rejected", 0) }}</td><td>{{ p.oversight.approvals.get("expired", 0) }}</td><td>{{ p.oversight.approvals.get("revoked", 0) }}</td><td>{{ p.oversight.approvals.get("pending", 0) }}</td><td>{% if p.oversight.median_decision_seconds is not none %}{{ p.oversight.median_decision_seconds }} s{% else %}-{% endif %}</td></tr>
+</table>
+<p class="muted">An approval is bound to the agent, the tool and a hash of the exact arguments. It can be used once. A call with different arguments needs a new approval. In scripted demo scenarios the approver is the scenario script, so decision times are not human response times.</p>
+{% else %}
+<p>No approvals were requested.</p>
+{% endif %}
+<h3>Kill switch</h3>
+{% if p.oversight.kills %}
+<table>
+  <tr><th>When</th><th>Event</th><th>Scope</th><th>Reason</th></tr>
+  {% for k in p.oversight.kills %}<tr><td>{{ k.ts | when }}</td><td>{{ k.what }}</td><td>{{ k.scope }}</td><td>{{ k.reason }}</td></tr>{% endfor %}
+</table>
+{% else %}
+<p>The kill switch was not used for this agent.</p>
+{% endif %}
+<h3>Decisions by rule</h3>
+<table>
+  <tr><th>Rule or reason</th><th>Allowed</th><th>Denied</th><th>Held for approval</th><th>Tool error</th></tr>
+  {% for rule, counts in p.oversight.by_rule.items() %}<tr><td>{{ rule }}</td><td>{{ counts.get("OK", 0) }}</td><td>{{ counts.get("DENIED", 0) }}</td><td>{{ counts.get("PENDING_APPROVAL", 0) }}</td><td>{{ counts.get("TOOL_ERROR", 0) }}</td></tr>
+  {% else %}<tr><td colspan="5">No tool calls recorded.</td></tr>{% endfor %}
+</table>
+
+<h2>5. Robustness testing</h2>
+{% if p.robustness %}
+<p>Latest eval run: {{ p.robustness.generated_at | when }} · gate {% if p.robustness.passed %}<span class="ok">PASS</span>{% else %}<span class="bad">FAIL</span>{% endif %}. The suites run in replay mode on every commit; they test the gateway and the classification agents of this installation, not this agent's production traffic.</p>
+<table>
+  <tr><th>Metric</th><th>Value</th><th>Threshold</th><th>Gate</th></tr>
+  {% for row in p.robustness.thresholds %}
+  <tr><td>{{ row.label }}</td><td>{% if row.kind == "rate" %}{{ row.value | pct }}{% elif row.kind == "bool" %}{{ "yes" if row.value else "no" }}{% elif row.kind == "ms" %}{{ row.value }} ms{% else %}{{ row.value }}{% endif %}</td><td>{{ row.op }} {% if row.kind == "rate" %}{{ row.threshold | pct }}{% elif row.kind == "bool" %}{{ "yes" if row.threshold else "no" }}{% elif row.kind == "ms" %}{{ row.threshold }} ms{% else %}{{ row.threshold }}{% endif %}</td><td>{% if row.pass %}<span class="ok">pass</span>{% else %}<span class="bad">FAIL</span>{% endif %}</td></tr>
+  {% endfor %}
+</table>
+<p>Cases: {% for suite, count in p.robustness.counts.items() %}{{ suite }} {{ count.passed }}/{{ count.total }}{{ "; " if not loop.last }}{% endfor %}.{% if p.robustness.failing %} Failing: {{ p.robustness.failing | join(", ") }}.{% endif %}</p>
+{% else %}
+<p>No eval results are available on this installation. Run <code>make eval</code>.</p>
+{% endif %}
+
+<h2>6. Incidents</h2>
+{% if p.incidents %}
+<table>
+  <tr><th>#</th><th>Rule</th><th>Severity</th><th>Status</th><th>Opened</th><th>Closed</th><th>Summary and lifecycle notes</th></tr>
+  {% for i in p.incidents %}
+  <tr><td>{{ i.id }}</td><td>{{ i.rule_id }}</td><td>{{ i.severity }}</td><td>{{ i.status }}</td><td>{{ i.opened_at | when }}</td><td>{{ i.closed_at | when }}</td>
+      <td>{{ i.summary }}{% for n in i.notes %}<br><span class="muted">{{ n.ts | when }} → {{ n.status }} by {{ n.actor }}: {{ n.note }}</span>{% endfor %}</td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No incidents were opened for this agent.</p>
+{% endif %}
+
+<h2>7. Usage and budgets</h2>
+<table>
+  <tr><th style="width: 50%">Model calls</th><td>{{ p.usage.model_calls }}</td></tr>
+  <tr><th>Tokens (input / output)</th><td>{{ "{:,}".format(p.usage.tokens_in) }} / {{ "{:,}".format(p.usage.tokens_out) }}</td></tr>
+  <tr><th>Model cost recorded</th><td>${{ "%.4f" | format(p.usage.cost_usd) }} <span class="muted">(from configured list prices, unverified)</span></td></tr>
+  <tr><th>Tool calls counted against budgets</th><td>{{ p.usage.tool_calls }}</td></tr>
+  <tr><th>Tool calls denied because a budget was exhausted</th><td>{{ p.usage.budget_denials }}</td></tr>
+  <tr><th>Model calls blocked (budget or kill switch)</th><td>{{ p.usage.model_calls_blocked }}</td></tr>
+</table>
+{% if p.policy and p.policy.budgets %}
+<p>Caps in the policy in force: {% for key, value in p.policy.budgets.items() %}<code>{{ key }}</code> = {{ value if value is not none else "no cap" }}{{ "; " if not loop.last }}{% endfor %}.</p>
+{% endif %}
+
+<h2>8. Record-keeping</h2>
+<table>
+  <tr><th style="width: 50%">Audit events in the log (all agents)</th><td>{{ p.records.events_total }}</td></tr>
+  <tr><th>Audit events for this agent</th><td>{{ p.records.events_agent }}</td></tr>
+  <tr><th>Integrity verification at generation time</th><td>{% if p.records.chain_ok %}<span class="ok">PASS</span>: every event's hash matches its content and links to the previous event{% else %}<span class="bad">FAIL</span> at event #{{ p.records.first_broken_seq }}: {{ p.records.reason }}{% endif %}</td></tr>
+  <tr><th>Hash of the newest event</th><td class="mono">{{ p.records.head_hash }}</td></tr>
+</table>
+<p class="muted">Each event stores sha256(previous hash + canonical JSON of the event). Verification recomputes the whole chain. Re-run it with <code>make verify-audit</code>.</p>
+<table>
+  <tr><th>Event type (this agent)</th><th>Count</th></tr>
+  {% for kind, count in p.records.by_type.items() %}<tr><td>{{ kind }}</td><td>{{ count }}</td></tr>{% endfor %}
+</table>
+
+<h2>9. Framework mapping</h2>
+<p>Where the evidence in this pack is relevant. Rows appear only for capabilities with evidence above. Every cell is an unverified starting point {{ verify() }}; clause-level references only for ISO/IEC 42001.</p>
+<table>
+  <tr><th>Bastion capability</th><th>EU AI Act {{ verify() }}</th><th>NIST AI RMF {{ verify() }}</th><th>ISO/IEC 42001 clause {{ verify() }}</th></tr>
+  {% for row in p.mapping %}<tr><td>{{ row.capability }}</td><td>{{ row.eu }} {{ verify() }}</td><td>{{ row.nist }} {{ verify() }}</td><td>{{ row.iso }} {{ verify() }}</td></tr>{% endfor %}
+</table>
+{% if p.mapping_omitted %}<p class="muted">Not shown, because this pack holds no evidence for them: {{ p.mapping_omitted | join("; ") }}.</p>{% endif %}
+
+<h2>10. Limitations</h2>
+<ul>{% for item in p.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+
+<div class="notice"><strong>{{ p.disclaimer }}</strong> Generated {{ p.generated_at | when }} by Bastion v{{ p.bastion_version }}.</div>
+</body>
+</html>

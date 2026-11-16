@@ -49,6 +49,20 @@ class Api:
             raise ApiError(response.status_code, detail)
         return response.json()
 
+    def get_bytes(self, path: str) -> bytes:
+        """A non-JSON resource (HTML, PDF)."""
+        try:
+            response = self.http.get(self.base_url + path, headers=self._headers(), timeout=120)
+        except httpx.HTTPError as exc:
+            raise ApiError(0, f"Cannot reach the Bastion API at {self.base_url} ({exc})") from exc
+        if response.status_code >= 400:
+            try:
+                detail = str(response.json().get("detail", response.text))
+            except ValueError:
+                detail = response.text
+            raise ApiError(response.status_code, detail)
+        return response.content
+
     def get(self, path: str, **params: Any) -> Any:
         return self._request("GET", path, params={k: v for k, v in params.items() if v is not None})
 

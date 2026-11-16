@@ -50,10 +50,6 @@ def test_scenarios_listed(api):
     assert {s["id"] for s in listed if s["needs_approval"]} == {"uc04", "uc05"}
 
 
-def test_evidence_route_is_honest_about_not_existing_yet(api):
-    assert api.anon.get(f"/agents/{AGENT}/evidence").status_code in (200, 501)
-
-
 # --- passcode guard ------------------------------------------------------------------------------
 MUTATIONS = [
     ("/agents/loan-ops-agent/kill", {"reason": "x"}),

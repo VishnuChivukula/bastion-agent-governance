@@ -25,6 +25,7 @@ make setup   # install dependencies and git hooks
 make demo    # registration plus six governed scenarios in the terminal, replay mode, no key
 make serve   # console at http://localhost:8501, API docs at http://127.0.0.1:8000/docs
 make eval    # red-team, benign and assessor suites with the CI thresholds
+make evidence  # evidence pack (HTML + PDF) for the demo agent, written to data/evidence/
 make up      # the same stack in Docker
 ```
 
@@ -129,9 +130,10 @@ R-003 sends large or sharply increased limit changes to a human, and R-005 allow
 | Incidents handled ad hoc | Policy-opened incidents: open, acknowledged, contained, resolved; optional automatic kill | `incidents/service.py` |
 | Policy changes without trace | Versioned policies with diff, activate and roll back | `api/routers/policies.py`, `console/views/policies.py` |
 | Controls that silently stop working | 25 red-team and 15 benign scenarios plus an assessor suite, run on every commit; CI fails on thresholds | `evals/` (repo root), `api/routers/evals.py` |
+| Evidence assembled by hand before an audit | Evidence pack per agent, generated from the live records: HTML and PDF with the policy hash, oversight figures, incidents, test results, audit integrity and a framework mapping ([sample PDF](docs/samples/evidence-pack-loan-ops-agent.pdf)) | `evidence/generator.py`, `evidence/pdf.py` |
 | No single place to operate | FastAPI control plane and Streamlit console | `api/`, `console/` |
 
-The console has eight pages: Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry (classification records, registration and sign-off), Policies and Red-Team (the eval scoreboard).
+The console has nine pages: Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry (classification records, registration and sign-off), Policies, Evidence (preview and download the pack) and Red-Team (the eval scoreboard).
 
 ## Results
 
@@ -163,6 +165,8 @@ Bastion supports evidence for the expectations below. It does not make a system 
 | PII redaction and DLP | Art. 10 [VERIFY]; GDPR Art. 5(1)(c) [VERIFY] | MAP, MANAGE [VERIFY] | 6.1, 8.2 [VERIFY] |
 | Red-team suite and CI gate | Art. 15 [VERIFY] | MEASURE [VERIFY] | 9.1 [VERIFY] |
 | Incident lifecycle | Art. 72, Art. 73 (provider side) [VERIFY] | MANAGE [VERIFY] | 10.2 [VERIFY] |
+| Agent card | Art. 13, Art. 50 [VERIFY] | GOVERN, MAP [VERIFY] | 7.4 [VERIFY] |
+| Evidence pack | Art. 11 and Annex IV, partial support only [VERIFY] | GOVERN [VERIFY] | 7.5 [VERIFY] |
 | Budgets and cost caps | None; operational control | MANAGE [VERIFY] | 8.1 [VERIFY] |
 
 Obligations differ for providers and deployers under the EU AI Act; a bank using a third-party agent is typically a deployer [VERIFY].
@@ -192,7 +196,6 @@ Obligations differ for providers and deployers under the EU AI Act; a bank using
 
 Planned for v0.2. None of these exists today.
 
-- Auto-generated evidence pack (HTML and PDF) with a control mapping.
 - Demo GIF.
 - Threat model document.
 
