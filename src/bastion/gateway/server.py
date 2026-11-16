@@ -11,6 +11,7 @@ from mcp import types
 from mcp.server.lowlevel import Server
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from bastion import __version__
@@ -84,6 +85,19 @@ def build_mcp_server(gateway: Gateway) -> Server:
         on_list_tools=on_list_tools,
         on_call_tool=on_call_tool,
     )
+
+
+def build_mcp_route(gateway: Gateway, *, path: str = "/mcp") -> tuple[Route, Any]:
+    """The gateway as one route for a host ASGI app (the control-plane API mounts it at `/mcp`).
+
+    Returns the route and the MCP session manager; the host must hold `manager.run()` open for
+    its lifetime, because a mounted app's own lifespan is never started.
+    """
+    server = build_mcp_server(gateway)
+    inner = server.streamable_http_app(
+        streamable_http_path=path, stateless_http=True, json_response=True
+    )
+    return Route(path, endpoint=BearerAuth(inner, gateway)), server.session_manager
 
 
 def build_mcp_app(gateway: Gateway, *, path: str = "/mcp") -> ASGIApp:

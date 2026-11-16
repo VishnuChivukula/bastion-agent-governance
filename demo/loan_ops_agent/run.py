@@ -150,6 +150,7 @@ class AgentRunner:
             status = "halted"  # the kill switch already marked the run row
         else:
             registry.set_run_status(run_id, status)
+        registry.set_run_text(run_id, state.get("final_text", ""))
         events = audit_since(self.gateway.engine, since)
         return RunResult(
             scenario=scenario,
@@ -163,9 +164,13 @@ class AgentRunner:
         )
 
     # --- public API ----------------------------------------------------------------------------
-    async def start(self, scenario: Scenario, on_tool: Callable | None = None) -> RunResult:
+    async def start(
+        self, scenario: Scenario, on_tool: Callable | None = None, run_id: str | None = None
+    ) -> RunResult:
+        """Run until the agent finishes or pauses for approval. `run_id`: a run already opened
+        with `registry.start_run` (the API opens it first so it can return the id at once)."""
         since = self._first_seq()
-        run_id = self.gateway.registry.start_run(self.agent_id, scenario.id)
+        run_id = run_id or self.gateway.registry.start_run(self.agent_id, scenario.id)
         if scenario.kill_after_tool_calls is not None and on_tool is None:
             on_tool = self._killer(scenario.kill_after_tool_calls)
         deps = self._deps(scenario, run_id, on_tool)
@@ -201,11 +206,11 @@ class AgentRunner:
 
         return on_tool
 
-    async def run_scripted(self, scenario: Scenario) -> RunResult:
+    async def run_scripted(self, scenario: Scenario, run_id: str | None = None) -> RunResult:
         """Run a scenario end to end, with the script standing in for the human approver."""
         if scenario.scripted:
-            return await self._approve_then_swap(scenario)
-        result = await self.start(scenario)
+            return await self._approve_then_swap(scenario, run_id)
+        result = await self.start(scenario, run_id=run_id)
         if result.status == "interrupted" and scenario.approver:
             approve = scenario.approver == "approve"
             decisions = {}
@@ -225,31 +230,57 @@ class AgentRunner:
             return resumed
         return result
 
-    async def _approve_then_swap(self, scenario: Scenario) -> RunResult:
+    async def _approve_then_swap(self, scenario: Scenario, run_id: str | None = None) -> RunResult:
         """UC-05, no model involved: get 60,000 approved, then call with 600,000."""
-        since = self._first_seq()
-        run_id = self.gateway.registry.start_run(self.agent_id, scenario.id)
-        args = {
-            "customer_id": "C-0021",
-            "current_limit": 40000,
-            "new_limit": 60000,
-            "reason": "customer request ref 8812",
-        }
-        first, _ = await self.call_tool(run_id, "update_credit_limit", args)
+        first = await self.swap_begin(scenario, run_id)
         self.gateway.approvals.decide(
-            first["approval_id"], approve=True, decided_by=APPROVER,
+            first.pending[0]["approval_id"], approve=True, decided_by=APPROVER,
             reason="Approved for 60,000 as requested.",
         )  # fmt: skip
+        result = await self.swap_finish(scenario, first.run_id)
+        result.since = first.since
+        result.events = audit_since(self.gateway.engine, first.since)
+        result.timeline = [line for e in result.events if (line := timeline_line(e))]
+        return result
+
+    async def swap_begin(self, scenario: Scenario, run_id: str | None = None) -> RunResult:
+        """UC-05 step 1: ask for 60,000. The run pauses until an approver decides."""
+        since = self._first_seq()
+        run_id = run_id or self.gateway.registry.start_run(self.agent_id, scenario.id)
+        first, _ = await self.call_tool(run_id, "update_credit_limit", SWAP_ARGS)
+        self.gateway.registry.set_run_status(run_id, "interrupted")
+        pending = [
+            {"name": "update_credit_limit", "input": SWAP_ARGS, "approval_id": first["approval_id"]}
+        ]
+        return RunResult(scenario=scenario, run_id=run_id, status="interrupted", since=since,
+                         pending=pending)  # fmt: skip
+
+    async def swap_finish(self, scenario: Scenario, run_id: str) -> RunResult:
+        """UC-05 step 2: whatever was decided for 60,000, call with 600,000 instead."""
+        since = self._first_seq()
+        self.gateway.registry.set_run_status(run_id, "running")
+        original = next(
+            a for a in reversed(self.gateway.approvals.all(agent_id=self.agent_id))
+            if a.run_id == run_id
+        )  # fmt: skip
         swapped, _ = await self.call_tool(
-            run_id, "update_credit_limit", {**args, "new_limit": 600000}
+            run_id, "update_credit_limit", {**SWAP_ARGS, "new_limit": 600000}
         )
-        grant = self.gateway.approvals.get(first["approval_id"])
+        grant = self.gateway.approvals.get(original.id)
         text = (
-            f"Approved {first['approval_id']} for 60,000. The call with 600,000 came back "
-            f"{swapped['status']} ({swapped.get('approval_id')}); nothing executed and the "
-            f"original grant is still '{grant.status}'."
+            f"{original.id} for 60,000 was {original.status}. The call with 600,000 came back "
+            f"{swapped['status']} ({swapped.get('approval_id') or swapped.get('reason')}); "
+            f"nothing executed and the original approval is still '{grant.status}'."
         )
         return self._finish(scenario, run_id, {"outcome": "completed", "final_text": text}, since)
+
+
+SWAP_ARGS = {
+    "customer_id": "C-0021",
+    "current_limit": 40000,
+    "new_limit": 60000,
+    "reason": "customer request ref 8812",
+}
 
 
 # --- presentation --------------------------------------------------------------------------------
@@ -338,18 +369,23 @@ class DemoEnvironment:
         self.engine.dispose()
 
     def reset_between_scenarios(self) -> None:
-        """Each scenario starts from the same bank data and an agent that is allowed to act."""
-        build_demo_data(self.demo_db)
-        if self.gateway.killswitch.active_scope(DEMO_AGENT_ID):
-            self.gateway.killswitch.reactivate(
-                DEMO_AGENT_ID, reason="Demo: reset before the next scenario", actor=APPROVER
+        reset_demo_state(self.gateway, self.demo_db)
+
+
+def reset_demo_state(gateway: Gateway, demo_db: Path, actor: str = APPROVER) -> None:
+    """Each scenario starts from the same bank data and an agent that is allowed to act."""
+    build_demo_data(demo_db)
+    for scope in ("global", DEMO_AGENT_ID):
+        if gateway.killswitch.is_active(scope):
+            gateway.killswitch.reactivate(
+                scope, reason="Demo: reset before the next scenario", actor=actor
             )
-        for incident in self.gateway.incidents.all(agent_id=DEMO_AGENT_ID):
-            if incident.status != "resolved":
-                self.gateway.incidents.advance(
-                    incident.id, "resolved", actor=APPROVER, note="Demo: reset between scenarios"
-                )
-        self.gateway.approvals.revoke_open(DEMO_AGENT_ID, reason="demo reset", actor=APPROVER)
+    for incident in gateway.incidents.all(agent_id=DEMO_AGENT_ID):
+        if incident.status != "resolved":
+            gateway.incidents.advance(
+                incident.id, "resolved", actor=actor, note="Demo: reset between scenarios"
+            )
+    gateway.approvals.revoke_open(DEMO_AGENT_ID, reason="demo reset", actor=actor)
 
 
 def print_result(result: RunResult) -> None:

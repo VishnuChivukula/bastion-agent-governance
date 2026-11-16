@@ -9,7 +9,7 @@
 | S1 Gateway + audit | ☑ | see `git log` (`feat: gateway core`) | policy engine, AST conditions, arg hardening, Presidio redaction + DLP, tool budgets, MCP proxy over streamable HTTP, hash-chained audit + verify; pytest covers RT-04..RT-12, RT-17..RT-20, RT-23..RT-25 and the gateway half of RT-01..RT-03 (their incident half is S3); 266 tests, 98% coverage, overhead p95 ≈ 10 ms |
 | S2 Demo agent + replay | ☑ | see `git log` (`feat: loan ops agent`) | LangGraph agent (model → tools → await_approval with `interrupt()`), MCP HTTP client with bearer token, 10 recorded fixtures, `make demo` runs UC-02..UC-07 in replay with a decision timeline; `make record` re-records |
 | S3 Oversight | ☑ | see `git log` (`feat: oversight`) | args-bound single-use grants, TTL, revoke, kill switch (agent + global), incident rules + lifecycle, model token/cost budgets; UC-04..UC-07 pass end to end in replay; RT-13..RT-23 covered in pytest |
-| S4 API + console | ☐ | | |
+| S4 API + console | ☑ | see `git log` (`feat: control-plane API`) | FastAPI control plane with the gateway mounted at `/mcp`; routers for agents, kill switch, usage, policies (versions, diff, activate), approvals, incidents, runs, audit (events, verify), overview; evidence route answers 501 until S7; fail-closed passcode guard (ADR-008); Streamlit console with Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry, Policies; `make serve` via honcho; 345 tests, 95% coverage |
 | S8 Package + deploy | ☐ | | |
 | S9a Ship-now polish | ☐ | | |
 | S5 Registry + assessor | ☐ | | |
@@ -18,7 +18,7 @@
 | S9b Showcase | ☐ | | |
 
 ## Next exact step
-S4: add deps (`fastapi`, `streamlit`, `honcho`); `src/bastion/api/main.py` mounting the MCP gateway at `/mcp` (run the MCP session manager lifespan from the FastAPI lifespan; fall back to a separate process on port 8100 + ADR if awkward), routers: agents, policies (versions + diff), approvals, killswitch, incidents, runs (start scenario via `AgentRunner`, status, resume after approval), audit (events, verify), evidence (placeholder route returning 501 until S7); passcode guard (constant-time) on mutating routes; `/healthz`. Streamlit console pages per FR-81 with mode banner + disclaimer footer. `make serve` via honcho. Then run the `reviewer` subagent on S0–S4 and fix P0/P1.
+S4 reviewer findings (if any P0/P1 remain, fix first). Then S8: Dockerfile (python:3.12-slim, uv sync, non-root), `docker-compose.yml`, `railway.json`, CI `docker build` job that starts the container and checks `/healthz` and the console; `make up`. Then S9a (README v1, release v0.1.0), S5, S6, S7, S9b.
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -49,6 +49,13 @@ S4: add deps (`fastapi`, `streamlit`, `honcho`); `src/bastion/api/main.py` mount
 - 2026-11-16 — CI failure on the S1 commit: `data/` in `.gitignore` also matched `demo/data/`, so the generator was never committed. Fixed by anchoring the rule to `/data/`.
 
 - 2026-11-16 — CI failure on the S2 commit (two causes). (1) gitleaks flagged each fixture's own sha256 in a field named `key` (generic-api-key false positive): the field is now `fixture_sha256`, and `.gitleaks.toml` exempts only that one historical commit. (2) The 50 ms latency test measured 68 ms on the CI runner: the threshold was not loosened; spaCy's parser and NER stages (unused by the pattern-based recognisers) were switched off, which cut local p95 from ~23 ms to ~10 ms, and the test now samples 100 calls.
+- 2026-11-16 — S4: the gateway is one route inside the API process; the passcode guard fails closed; `make serve` enables a fixed local passcode; one scenario run at a time, each starting with an audited demo reset; runs take `approver: scripted | human` (ADR-008).
+- 2026-11-16 — Console pages for Evidence and Red-Team are added in S7 and S6 with their features, not as placeholders now — no page that pretends to work.
+- 2026-11-16 — `runs.final_text` column added — the agent's closing summary must survive an API restart and be readable by the console.
+- 2026-11-16 — `BASTION_API_URL` defaults to `http://127.0.0.1:8000` (not `localhost`) — the API binds IPv4 loopback; `localhost` can resolve to `::1` first.
+- 2026-11-16 — Console pages are thin files in `console/pages/` that call `console/views/*.render()`; the first page can be chosen with `BASTION_CONSOLE_START_PAGE` — Streamlit's test harness can only open the start page reliably, and the GIF recorder needs deep links.
+- 2026-11-16 — Honcho gives the first Procfile entry the platform's `$PORT`, so `console` is listed first and the API stays on 127.0.0.1:8000 (not exposed publicly).
+- 2026-11-16 — Dependabot PRs #1–#3 were already closed (the action versions they proposed are in `ci.yml`).
 
 ## Human actions needed
 - None now. Later: Railway deploy after S8 (`kit-local/START_HERE.md` step 7); review `docs/VERIFY.md`.

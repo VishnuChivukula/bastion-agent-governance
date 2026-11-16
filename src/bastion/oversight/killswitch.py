@@ -40,6 +40,11 @@ class KillSwitchService:
             return GLOBAL
         return agent_id if rows else None
 
+    def is_active(self, scope: str) -> bool:
+        with session_scope(self.engine) as session:
+            row = session.get(KillSwitch, scope)
+            return bool(row and row.active)
+
     def status(self) -> list[KillSwitch]:
         with session_scope(self.engine) as session:
             return list(session.scalars(select(KillSwitch).order_by(KillSwitch.scope)))

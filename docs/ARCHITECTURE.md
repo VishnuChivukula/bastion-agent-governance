@@ -22,7 +22,7 @@ flowchart LR
 ## 2. Runtime topology (ADR-001: single container)
 One container, two processes run by `honcho` from a `Procfile`:
 - `api`: `uvicorn bastion.api.main:app --port 8000`. The FastAPI app **mounts the MCP gateway** (FastMCP streamable-HTTP app) at `/mcp`. It runs agent scenarios as background tasks.
-- `console`: `streamlit run src/bastion/console/app.py --server.port $PORT`. It talks to the API at `http://localhost:8000`.
+- `console`: `streamlit run src/bastion/console/app.py --server.port $PORT`. It talks to the API at `http://127.0.0.1:8000`.
 - The demo tools MCP server is **spawned by the gateway over stdio** (`python -m demo.tools_server`).
 
 Fallback: if mounting FastMCP inside FastAPI is awkward in the installed `mcp` version, run the gateway as a third Procfile process on port 8100 and record the change as an ADR.
@@ -192,7 +192,8 @@ Jinja2 → HTML → Playwright Chromium `page.pdf(display_header_footer=True)`. 
 | `BASTION_DB_PATH` | `./data/bastion.db` |
 | `BASTION_MODEL_FAST` | `claude-haiku-5-5` |
 | `BASTION_MODEL_SMART` | `claude-sonnet-5-5` |
-| `BASTION_API_URL` | `http://localhost:8000` |
+| `BASTION_API_URL` | `http://127.0.0.1:8000` |
+| `BASTION_LOCAL_DEV` | `false` (`make serve` sets it: with no passcode configured, the local passcode `bastion-local` is accepted; see ADR-008) |
 | `BASTION_SEED_ON_START` | `true` (seed demo agent, policy and data if the DB is empty) |
 
 ## 11. Libraries

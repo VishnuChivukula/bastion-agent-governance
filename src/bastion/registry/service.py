@@ -118,6 +118,21 @@ class Registry:
             payload={"run_id": run_id, "status": status},
         )
 
+    def set_run_text(self, run_id: str, text: str) -> None:
+        """What the agent (or the scenario script) reported at the end of the run."""
+        with session_scope(self.engine) as session:
+            run = session.get(Run, run_id)
+            if run is not None:
+                run.final_text = text
+
+    def get_run(self, run_id: str) -> Run | None:
+        with session_scope(self.engine) as session:
+            return session.get(Run, run_id)
+
+    def list_runs(self, limit: int = 50) -> list[Run]:
+        with session_scope(self.engine) as session:
+            return list(session.scalars(select(Run).order_by(Run.started_at.desc()).limit(limit)))
+
     def resolve_run(self, agent_id: str, run_id: str | None) -> str:
         """Map a client-supplied run id to a budget bucket.
 

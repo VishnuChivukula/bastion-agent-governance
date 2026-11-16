@@ -38,8 +38,9 @@ verify-audit: ## Verify the audit hash chain
 gif: ## Record the demo GIF
 	@echo "not yet: S9b"
 
-serve: ## Run API + console locally
-	@echo "not yet: S4"
+serve: ## Run API + console locally (console on http://localhost:8501, API docs on :8000/docs)
+	@echo "Console: http://localhost:8501   API: http://127.0.0.1:8000/docs   (Ctrl-C stops both)"
+	@BASTION_LOCAL_DEV=1 PORT=8501 uv run honcho start
 
 up: ## Run in Docker
 	@echo "not yet: S8"

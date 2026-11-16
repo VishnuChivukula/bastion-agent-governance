@@ -9,6 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Mode = Literal["replay", "record", "live"]
 
+LOCAL_DEV_PASSCODE = "bastion-local"  # not a secret: only honoured with BASTION_LOCAL_DEV
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -26,12 +27,22 @@ class Settings(BaseSettings):
     db_path: Path = Field(Path("./data/bastion.db"), validation_alias="BASTION_DB_PATH")
     model_fast: str = Field("claude-haiku-5-5", validation_alias="BASTION_MODEL_FAST")
     model_smart: str = Field("claude-sonnet-5-5", validation_alias="BASTION_MODEL_SMART")
-    api_url: str = Field("http://localhost:8000", validation_alias="BASTION_API_URL")
+    # Set by `make serve` only: lets a developer click through the console without choosing a
+    # passcode. Never set it on a deployment.
+    local_dev: bool = Field(False, validation_alias="BASTION_LOCAL_DEV")
+    api_url: str = Field("http://127.0.0.1:8000", validation_alias="BASTION_API_URL")
     seed_on_start: bool = Field(True, validation_alias="BASTION_SEED_ON_START")
     fixtures_dir: Path = Field(REPO_ROOT / "fixtures" / "llm", validation_alias="BASTION_FIXTURES")
     prices_path: Path = Field(
         REPO_ROOT / "config" / "prices.yaml", validation_alias="BASTION_PRICES_PATH"
     )
+
+    @property
+    def effective_passcode(self) -> str | None:
+        """The passcode mutating actions must present. None: mutating actions are disabled."""
+        if self.passcode is not None and self.passcode.get_secret_value():
+            return self.passcode.get_secret_value()
+        return LOCAL_DEV_PASSCODE if self.local_dev else None
 
     @property
     def has_api_key(self) -> bool:

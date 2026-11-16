@@ -71,6 +71,7 @@ class Run(Base):
     # running / interrupted / completed / halted / failed
     status: Mapped[str] = mapped_column(String, default="running")
     thread_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    final_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[str] = mapped_column(String, default=iso)
     ended_at: Mapped[str | None] = mapped_column(String, nullable=True)
 
