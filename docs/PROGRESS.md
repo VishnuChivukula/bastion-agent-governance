@@ -6,7 +6,7 @@
 | Slice | Status | Commit | Notes |
 |---|---|---|---|
 | S0 Bootstrap | ☑ | see `git log` (`chore: bootstrap`) | uv project, config, LLM replay/record/live client, CI, ADR-001..006, VERIFY register |
-| S1 Gateway + audit | ☑ | see `git log` (`feat: gateway core`) | policy engine, AST conditions, arg hardening, Presidio redaction + DLP, tool budgets, MCP proxy over streamable HTTP, hash-chained audit + verify; pytest covers RT-04..RT-12, RT-17..RT-20, RT-23..RT-25 and the gateway half of RT-01..RT-03 (their incident half is S3); 266 tests, 98% coverage, overhead p95 ≈ 23 ms |
+| S1 Gateway + audit | ☑ | see `git log` (`feat: gateway core`) | policy engine, AST conditions, arg hardening, Presidio redaction + DLP, tool budgets, MCP proxy over streamable HTTP, hash-chained audit + verify; pytest covers RT-04..RT-12, RT-17..RT-20, RT-23..RT-25 and the gateway half of RT-01..RT-03 (their incident half is S3); 266 tests, 98% coverage, overhead p95 ≈ 10 ms |
 | S2 Demo agent + replay | ☑ | see `git log` (`feat: loan ops agent`) | LangGraph agent (model → tools → await_approval with `interrupt()`), MCP HTTP client with bearer token, 10 recorded fixtures, `make demo` runs UC-02..UC-07 in replay with a decision timeline; `make record` re-records |
 | S3 Oversight | ☑ | see `git log` (`feat: oversight`) | args-bound single-use grants, TTL, revoke, kill switch (agent + global), incident rules + lifecycle, model token/cost budgets; UC-04..UC-07 pass end to end in replay; RT-13..RT-23 covered in pytest |
 | S4 API + console | ☐ | | |
@@ -47,6 +47,8 @@ S4: add deps (`fastapi`, `streamlit`, `honcho`); `src/bastion/api/main.py` mount
 - 2026-11-16 — After a kill the agent's next model call is blocked by the SDK hook, so the run ends with a halt message from the agent program rather than a model-written summary.
 - 2026-11-16 — The model never sees approval ids; scenario runs reset the demo data first — keeps replay fixtures valid when a scenario is run repeatedly on one database.
 - 2026-11-16 — CI failure on the S1 commit: `data/` in `.gitignore` also matched `demo/data/`, so the generator was never committed. Fixed by anchoring the rule to `/data/`.
+
+- 2026-11-16 — CI failure on the S2 commit (two causes). (1) gitleaks flagged each fixture's own sha256 in a field named `key` (generic-api-key false positive): the field is now `fixture_sha256`, and `.gitleaks.toml` exempts only that one historical commit. (2) The 50 ms latency test measured 68 ms on the CI runner: the threshold was not loosened; spaCy's parser and NER stages (unused by the pattern-based recognisers) were switched off, which cut local p95 from ~23 ms to ~10 ms, and the test now samples 100 calls.
 
 ## Human actions needed
 - None now. Later: Railway deploy after S8 (`kit-local/START_HERE.md` step 7); review `docs/VERIFY.md`.

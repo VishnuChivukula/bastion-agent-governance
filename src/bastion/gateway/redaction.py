@@ -36,6 +36,12 @@ class Redactor:
                 "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
             }
         ).create_engine()
+        # Every entity Bastion supports is found by pattern and checksum recognisers, so the
+        # statistical parser and NER stages are switched off: they dominated gateway latency.
+        pipeline = nlp_engine.nlp["en"]
+        for stage in ("parser", "ner"):
+            if stage in pipeline.pipe_names:
+                pipeline.disable_pipe(stage)
         self._analyzer = AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["en"])
         self._analyzer.registry.add_recognizer(_EMAIL_ANY_TLD)
         self.find("warm-up a@example.com", list(SUPPORTED_ENTITIES))

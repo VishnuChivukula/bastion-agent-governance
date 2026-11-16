@@ -1,5 +1,5 @@
 {
- "key": "d1500a7706320eb1b46b6a42f89aa96aa0ab433c5357052effe6b8494ff81cb1",
+ "fixture_sha256": "d1500a7706320eb1b46b6a42f89aa96aa0ab433c5357052effe6b8494ff81cb1",
  "request": {
   "max_tokens": 4096,
   "messages": [

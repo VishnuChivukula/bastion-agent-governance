@@ -17,10 +17,12 @@ async def test_gateway_overhead_p95_is_under_50_ms(harness):
     ]
     await harness.gateway.list_tools(harness.agent_id)  # one-off: start the tools server
     overheads = []
-    for i in range(28):  # stays under the 30-call session budget
+    for i in range(100):
+        if i % 25 == 0:  # a fresh run every 25 calls stays under the 30-call session budget
+            run_id = harness.gateway.registry.start_run(harness.agent_id, "latency")
         tool, args = calls[i % len(calls)]
         started = time.perf_counter()
-        result = await harness.call(tool, args)
+        result = await harness.call(tool, args, run_id)
         wall_ms = (time.perf_counter() - started) * 1000
         overheads.append(wall_ms - result.downstream_ms)  # includes the audit write
     p95 = statistics.quantiles(overheads, n=20)[18]

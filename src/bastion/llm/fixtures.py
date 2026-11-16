@@ -44,7 +44,7 @@ class FixtureStore:
     def save(self, key: str, params: dict[str, Any], response: dict[str, Any]) -> Path:
         self.directory.mkdir(parents=True, exist_ok=True)
         path = self.path(key)
-        body = {"key": key, "request": _drop_none(params), "response": response}
+        body = {"fixture_sha256": key, "request": _drop_none(params), "response": response}
         path.write_text(
             json.dumps(body, sort_keys=True, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
         )
