@@ -33,7 +33,7 @@ evidence: ## Generate the evidence pack: make evidence AGENT=loan-ops-agent
 	@echo "not yet: S7"
 
 verify-audit: ## Verify the audit hash chain
-	@echo "not yet: S1"
+	@uv run bastion verify-audit
 
 gif: ## Record the demo GIF
 	@echo "not yet: S9b"
