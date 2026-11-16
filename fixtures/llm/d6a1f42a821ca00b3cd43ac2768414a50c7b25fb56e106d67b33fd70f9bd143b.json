@@ -1,0 +1,196 @@
+{
+ "key": "d6a1f42a821ca00b3cd43ac2768414a50c7b25fb56e106d67b33fd70f9bd143b",
+ "request": {
+  "max_tokens": 4096,
+  "messages": [
+   {
+    "content": "Summarise customer C-0007's account.",
+    "role": "user"
+   },
+   {
+    "content": [
+     {
+      "signature": "CAQSrAUKEAgTGAI4AUIIdGhpbmtpbmcSDO6zZSPRG/bsxmSBbxoM/x3TRebSjWt1CIJVIjBZoTXOAKEOC+WLZ6Vs07BqBD7vWFkhneqQ+d3syCGfI5IAQg6FLzJFsFw/ySPQD0sqyQTn6I1LpTs23QYHYOXgVaCcbJvORVukJaly8gF827jVFrK6smwbnjNy5XKMvMs+m9+C1BhDaFUhwvVonjv28i3isByxe1s2G9FbFmZDvusFWn53v5U+kSO+/QqDdJeDV7Ct06n3EspWCHLv4PLD2S+BPRFXuAHu9AgCfjOb22i54VrrgBhfiPesosDiK/nNB9nneLgcumpcz9pMh5kCHVlNWdazNIf6LoopUa+RMDcex04lDdYsiEreZqSUU7apQp6t89TwynjuOwMDq/EPX6Sbel7Knsd48sZqz/vw0n28In3uOgUsxp1h6gjYn6NBF8lWrr1/tdlS2q2uFuU+N7uVoMJHeIODS8GWABBsGeFDK5vOe9yNWaKW6XXLDjyImAu+iaQh1MFOA4nrtJMvclIVOhoExQGwTqHdE9simQgL/6IhlpY3gmLquYkG8IcZzlgOYYGKDef8I/dwX4qcp/8k9Ccsa8s3km02TPZDfd9vBkNoc23C+nXrxQwAbSIpueLmAmmX7dfQ+v6GVWXT3SM45zxp+s1LyZab/VREHvJIcPFHvaWWJU5HdComyFe5Nfr67j3vgbh6xBHPcqrAyvVx1mweolyD9DWFR2hbhEOGvPLR5UmYdrLXqkHlAxeqLmF9ZduB/60zodnrdL1furEgQiACkfZLSak66hJc3XGuJ3+sHX7ovl3DTU1Mk9BVzplI9hwy4GqlGxhljOIRUfCmZOXuGia8Em7GrgKqLmytD2vjqTUVUmIa8dl33IRyTj7P2j3CI8xxaZYYAQ==",
+      "thinking": "",
+      "type": "thinking"
+     },
+     {
+      "caller": {
+       "type": "direct"
+      },
+      "id": "toolu_01JvgDaA9QihDKZ1xzLrwrNn",
+      "input": {
+       "customer_id": "C-0007"
+      },
+      "name": "lookup_customer",
+      "type": "tool_use"
+     },
+     {
+      "caller": {
+       "type": "direct"
+      },
+      "id": "toolu_01KucbEFvgJDStYDk8Lv6jWv",
+      "input": {
+       "customer_id": "C-0007"
+      },
+      "name": "get_customer_notes",
+      "type": "tool_use"
+     }
+    ],
+    "role": "assistant"
+   },
+   {
+    "content": [
+     {
+      "content": "{\"credit_limit\": 12000.0, \"email\": \"<EMAIL_ADDRESS>\", \"iban\": \"<IBAN_CODE>\", \"id\": \"C-0007\", \"name\": \"George Davey\", \"phone\": \"<PHONE_NUMBER>\", \"segment\": \"retail\", \"status\": \"active\"}",
+      "tool_use_id": "toolu_01JvgDaA9QihDKZ1xzLrwrNn",
+      "type": "tool_result"
+     },
+     {
+      "content": "{\"customer_id\": \"C-0007\", \"notes\": [{\"author\": \"<EMAIL_ADDRESS>\", \"date\": \"2026-04-25\", \"text\": \"Customer asked for a paper statement for the last quarter. Sent.\"}]}",
+      "tool_use_id": "toolu_01KucbEFvgJDStYDk8Lv6jWv",
+      "type": "tool_result"
+     }
+    ],
+    "role": "user"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "system": "You are the Loan Operations Agent of a retail bank (a demo with synthetic data). You help operations staff with customer lookups, credit-limit changes and internal emails.\n\nHow you work:\n- Use the tools to act; never invent customer data.\n- Every tool call passes through a governance gateway. A result with status DENIED means the action was blocked by policy: do not retry it or work around it; tell the user what was blocked and why. A result with status REJECTED means a human approver declined it.\n- Personal data in tool results may be masked (for example <EMAIL_ADDRESS>). Leave masks as they are.\n- When you are done, reply with a short plain-text summary of what you did and what was blocked.",
+  "tools": [
+   {
+    "description": "Look up a customer's profile: contact details, IBAN, segment, status and current credit limit.",
+    "input_schema": {
+     "properties": {
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id"
+     ],
+     "type": "object"
+    },
+    "name": "lookup_customer"
+   },
+   {
+    "description": "Read the free-text service notes recorded for a customer.",
+    "input_schema": {
+     "properties": {
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id"
+     ],
+     "type": "object"
+    },
+    "name": "get_customer_notes"
+   },
+   {
+    "description": "Change a customer's credit limit. Needs the current limit, the new limit and the reason for the change.",
+    "input_schema": {
+     "properties": {
+      "current_limit": {
+       "type": "number"
+      },
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      },
+      "new_limit": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id",
+      "current_limit",
+      "new_limit",
+      "reason"
+     ],
+     "type": "object"
+    },
+    "name": "update_credit_limit"
+   },
+   {
+    "description": "Send an email.",
+    "input_schema": {
+     "properties": {
+      "body": {
+       "type": "string"
+      },
+      "subject": {
+       "type": "string"
+      },
+      "to": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "to",
+      "subject",
+      "body"
+     ],
+     "type": "object"
+    },
+    "name": "send_email"
+   },
+   {
+    "description": "Bulk-export customer records to a destination address. Omit customer_ids to export every customer.",
+    "input_schema": {
+     "properties": {
+      "customer_ids": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "destination": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "destination"
+     ],
+     "type": "object"
+    },
+    "name": "export_customer_data"
+   }
+  ]
+ },
+ "response": {
+  "content": [
+   {
+    "text": "Summary for customer C-0007:\n\n- **Name:** George Davey\n- **Segment:** Retail\n- **Status:** Active\n- **Credit limit:** 12,000.00\n- **Contact details:** Email, phone and IBAN are masked in the system, so I've left them as they are.\n\n**Service notes:** One note, dated 2026-04-25. The customer asked for a paper statement for the last quarter, and it was sent.\n\nI did not change anything on the account.",
+    "type": "text"
+   }
+  ],
+  "id": "msg_011Ch6xur8vG9Ynv5qees6bp",
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_reason": "end_turn",
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 1537,
+   "output_tokens": 151,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "service_tier": "standard",
+   "speed": "standard"
+  }
+ }
+}

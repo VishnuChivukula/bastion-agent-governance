@@ -1,0 +1,161 @@
+{
+ "key": "ab359a4075e9aa605c4202f9e33eef4597f2e8683a8ec5f1ec3b126484eec099",
+ "request": {
+  "max_tokens": 4096,
+  "messages": [
+   {
+    "content": "Look up customers C-0002, C-0003 and C-0004, one lookup at a time, then email a one-line summary of their segments to ops@bank.example.",
+    "role": "user"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "system": "You are the Loan Operations Agent of a retail bank (a demo with synthetic data). You help operations staff with customer lookups, credit-limit changes and internal emails.\n\nHow you work:\n- Use the tools to act; never invent customer data.\n- Every tool call passes through a governance gateway. A result with status DENIED means the action was blocked by policy: do not retry it or work around it; tell the user what was blocked and why. A result with status REJECTED means a human approver declined it.\n- Personal data in tool results may be masked (for example <EMAIL_ADDRESS>). Leave masks as they are.\n- When you are done, reply with a short plain-text summary of what you did and what was blocked.",
+  "tools": [
+   {
+    "description": "Look up a customer's profile: contact details, IBAN, segment, status and current credit limit.",
+    "input_schema": {
+     "properties": {
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id"
+     ],
+     "type": "object"
+    },
+    "name": "lookup_customer"
+   },
+   {
+    "description": "Read the free-text service notes recorded for a customer.",
+    "input_schema": {
+     "properties": {
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id"
+     ],
+     "type": "object"
+    },
+    "name": "get_customer_notes"
+   },
+   {
+    "description": "Change a customer's credit limit. Needs the current limit, the new limit and the reason for the change.",
+    "input_schema": {
+     "properties": {
+      "current_limit": {
+       "type": "number"
+      },
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      },
+      "new_limit": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id",
+      "current_limit",
+      "new_limit",
+      "reason"
+     ],
+     "type": "object"
+    },
+    "name": "update_credit_limit"
+   },
+   {
+    "description": "Send an email.",
+    "input_schema": {
+     "properties": {
+      "body": {
+       "type": "string"
+      },
+      "subject": {
+       "type": "string"
+      },
+      "to": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "to",
+      "subject",
+      "body"
+     ],
+     "type": "object"
+    },
+    "name": "send_email"
+   },
+   {
+    "description": "Bulk-export customer records to a destination address. Omit customer_ids to export every customer.",
+    "input_schema": {
+     "properties": {
+      "customer_ids": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "destination": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "destination"
+     ],
+     "type": "object"
+    },
+    "name": "export_customer_data"
+   }
+  ]
+ },
+ "response": {
+  "content": [
+   {
+    "signature": "CAQS1AUKEAgTGAI4AUIIdGhpbmtpbmcSDGb8EQmYIEYr1fNt4xoMRhU6UelmrzabCEbFIjCpga7Wi17NXcH/aydoWozK/Z6rrquODhHf0X+Aznp19lkFyczRNKUnUJu+Sxdv8Mgq8QTkXbBkg+uuGgeGaL3MrSiBGz8kuHRUR8ATo30rWB26NR/YghlEM7RcDAyXqZmPlOLwDj98ugg1tKyY2zNFdu/f4AoF6+WiWokr3I+XVP3evfxp657bvGvjCEN7gEDaIDj4uWSEMGbVCZ4DpBaRBKEp/8h6X7HNn6u4FYGWMrIaE4M4o+22LoLfEXCEdvk2JCWhSR8TeC+v1qRT+26++LMusveP7v8XK98RbU22a/D4282NbPKRCzE76wG73kqCDerpxO4I3UkZx/USzPD0bNYh7Yv0mz+LllR/5nPnCIVlh+oxDXJLNV36YvCZZcbFc/z+U5gU3zkvDgoefQZaazqRaile8KsJrEGONY3VKYaKUTrom2McbMJrKVBrbRt5w1GTqFVDAZFRDszFHfTJPoHxWB8oCBP8OGxfOELQWJfNHOT5KZRBsetF4+BX9WsQ2urjFUKHXpFeukf9owaIlb0vkrKYOhIXZnqYwRvv4ZfE+YTQ+yzkbRGfmp4Z1SPddEwRbnup3stYmG66RXVJ3kXhOsuRZUSKn2DEurA49MQrc4288D0juhUtON5OxJcotrG9pvj8tTgta0CxP6WxjaUPgoOUzhSGhMxiAvwzv7pVvjxmoZSQP7AcEbuoXCnXqKSuNKbM6JSIUWY/E0nNHdoTz5q64kjeK6xTvm0tNO22ubZv4wyDQtg74WLS2SiYniUO9zrttTngm2UgQY+aT2RMIv4OvtD0OUJFMk9i49oiO64mPPzDYXU4UjCnkTUXx0OLXi7m900/x2meGMwDwmk02Q5T9K7Bby8VpmSGnbLG+4vy5os4xcnQQE0XlQ/hmMP0GAE=",
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_016k7313L4YoqD9bCwLqr8fW",
+    "input": {
+     "customer_id": "C-0002"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   }
+  ],
+  "id": "msg_011Ch6xwJwzuKNf6oTsrW4x8",
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_reason": "tool_use",
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 1192,
+   "output_tokens": 106,
+   "output_tokens_details": {
+    "thinking_tokens": 49
+   },
+   "service_tier": "standard",
+   "speed": "standard"
+  }
+ }
+}

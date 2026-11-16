@@ -21,10 +21,10 @@ preflight: ## Report whether an API key is configured (never prints the value)
 	@uv run bastion preflight
 
 demo: ## Run the scripted scenarios in replay mode (no API key needed)
-	@echo "not yet: S2"
+	@BASTION_MODE=replay uv run python -m demo.loan_ops_agent.run
 
-record: ## Re-record LLM fixtures (needs ANTHROPIC_API_KEY)
-	@echo "not yet: S2"
+record: ## Re-record LLM fixtures (needs ANTHROPIC_API_KEY; calls the API)
+	@BASTION_MODE=record uv run python -m demo.loan_ops_agent.run
 
 eval: ## Run red-team, benign and assessor suites
 	@echo "not yet: S6"

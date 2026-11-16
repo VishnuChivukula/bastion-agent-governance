@@ -1,0 +1,590 @@
+{
+ "key": "a9b0b46d00662228a6893a1cb7267788b0177ffd5e0f781d2313fc99a98c20b0",
+ "request": {
+  "max_tokens": 4096,
+  "messages": [
+   {
+    "content": "Audit customers C-0001 through C-0040: look up every one of them and tell me how many are in the premier segment.",
+    "role": "user"
+   }
+  ],
+  "model": "claude-haiku-5-5",
+  "system": "You are the Loan Operations Agent of a retail bank (a demo with synthetic data). You help operations staff with customer lookups, credit-limit changes and internal emails.\n\nHow you work:\n- Use the tools to act; never invent customer data.\n- Every tool call passes through a governance gateway. A result with status DENIED means the action was blocked by policy: do not retry it or work around it; tell the user what was blocked and why. A result with status REJECTED means a human approver declined it.\n- Personal data in tool results may be masked (for example <EMAIL_ADDRESS>). Leave masks as they are.\n- When you are done, reply with a short plain-text summary of what you did and what was blocked.",
+  "tools": [
+   {
+    "description": "Look up a customer's profile: contact details, IBAN, segment, status and current credit limit.",
+    "input_schema": {
+     "properties": {
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id"
+     ],
+     "type": "object"
+    },
+    "name": "lookup_customer"
+   },
+   {
+    "description": "Read the free-text service notes recorded for a customer.",
+    "input_schema": {
+     "properties": {
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id"
+     ],
+     "type": "object"
+    },
+    "name": "get_customer_notes"
+   },
+   {
+    "description": "Change a customer's credit limit. Needs the current limit, the new limit and the reason for the change.",
+    "input_schema": {
+     "properties": {
+      "current_limit": {
+       "type": "number"
+      },
+      "customer_id": {
+       "description": "Customer id, e.g. C-0007",
+       "type": "string"
+      },
+      "new_limit": {
+       "type": "number"
+      },
+      "reason": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "customer_id",
+      "current_limit",
+      "new_limit",
+      "reason"
+     ],
+     "type": "object"
+    },
+    "name": "update_credit_limit"
+   },
+   {
+    "description": "Send an email.",
+    "input_schema": {
+     "properties": {
+      "body": {
+       "type": "string"
+      },
+      "subject": {
+       "type": "string"
+      },
+      "to": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "to",
+      "subject",
+      "body"
+     ],
+     "type": "object"
+    },
+    "name": "send_email"
+   },
+   {
+    "description": "Bulk-export customer records to a destination address. Omit customer_ids to export every customer.",
+    "input_schema": {
+     "properties": {
+      "customer_ids": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "destination": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "destination"
+     ],
+     "type": "object"
+    },
+    "name": "export_customer_data"
+   }
+  ]
+ },
+ "response": {
+  "content": [
+   {
+    "signature": "CAQSrgUKEAgTGAI4AUIIdGhpbmtpbmcSDHqsei+tajvM4rv3RBoMeKk1wBSu14TAV4HIIjDTQml9dq8krWRxSc56aTw9NPapI8hlcKqZcxnElHY86rMN7Jt4zhM4F9BHzmw+WiIqywSXBaYGgv+4nqmue7Igo3yjpG4kXGFbIMoQFy0JpQz1B6n5kyLWXlbvzlQE2wyU6DA8kFCsKpK+++/qElltSbN9etUneI4AUPlPflZtqcJCLdqkDTydckOoMYKvRG7TLc85AylvVSNGjBQRq/7zQQuwImdY2q+C13XNpQcAUutTNZo8sm8i4DItq7RBJsGE43dKDXyQscW5jK0r+MB4Lu5eUF13FGUFKNjY+t1aj1UGjnBOObwKNeUGFluIF0DjUJeyb5LZO/wHwSvFi2xmLCjjYXssVBsXl+uEqkhzhmFmf4/oYbiHCef8Kd/4zBbBugLmYuctB6jkQpg0vzeCQ0wZpLgnTtnNEd2YVkIKVp9aL0yuP12VnJo1YCaYsraX4OdZ6fz/X97GpRYbfeH131qhK4eb5h9qj/y1MgqETl404TMAQ1cTlzIykenBX0PhKqtC0V0yF5Ukk26H629uAfERtR+64lBsxXYyNS3TispYpRkoGUITjnoWlzoctvT3el9TrOsC+z8O23/UeU2ZESL4IkePd/CAZH4cOpe09nxI0a/zd1+jGoObKXmyvZsN5s7un8GXcnw/HBH64W6a4lsR6iv6+HnMogDrGaGd/v1bi8d7Ay/BVeGYUvH6NC4wcnX+0/RJYs7LSavH7pTNqTOWGJ38DIQ/Z3/BYKWNrSAB/DcTFmKbg+30sU68/PgMy1GBL5gV4sx22CJTjPRpaYmrWqBRhAfhnawH5WYsVGSpeOtV4NSnvDACXxikV9QbrdUfO8Z+txzNuyQ3zhgB",
+    "thinking": "",
+    "type": "thinking"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01GP5kAZS2vxd2NUFecHDvQc",
+    "input": {
+     "customer_id": "C-0001"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01Y3pXL8cXGpQLfztA5yfcBn",
+    "input": {
+     "customer_id": "C-0002"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01PLcDbmw1hygmyXjRUet8Dv",
+    "input": {
+     "customer_id": "C-0003"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01PY98eZYue7SjcyoatU7HLL",
+    "input": {
+     "customer_id": "C-0004"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01EMJtV5F1AcwAszvtkpcn4o",
+    "input": {
+     "customer_id": "C-0005"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_0113DH6vgtiChDNcDNdCmqBS",
+    "input": {
+     "customer_id": "C-0006"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_011KHLrUQPmimeXqAVhdHzxq",
+    "input": {
+     "customer_id": "C-0007"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01H99v63FqTeKqPsXZrocDCE",
+    "input": {
+     "customer_id": "C-0008"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01Th9YJjQgyhhncfSSRTxzhT",
+    "input": {
+     "customer_id": "C-0009"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01FhGwx8GMrMDdNJPacqE9db",
+    "input": {
+     "customer_id": "C-0010"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_012nz4Logq7byhYiHtHAAhRb",
+    "input": {
+     "customer_id": "C-0011"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_017VjK5AhXLxKEq1JmYyaUU1",
+    "input": {
+     "customer_id": "C-0012"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01ScyMQYHRkgdrPBfTWTUXAk",
+    "input": {
+     "customer_id": "C-0013"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01DoYE87icj4UCsz2hFNobfn",
+    "input": {
+     "customer_id": "C-0014"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01Ewj5DkyFeY7Ls5it1tgyfL",
+    "input": {
+     "customer_id": "C-0015"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01GgLJFMDHPpMaWiXQJfFGbd",
+    "input": {
+     "customer_id": "C-0016"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01BZ1HLCgZTR1rnUJ6a369hh",
+    "input": {
+     "customer_id": "C-0017"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01PN12vu74NoApZBHKEHNu59",
+    "input": {
+     "customer_id": "C-0018"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01X9zNqASE5TXJtMASgcFots",
+    "input": {
+     "customer_id": "C-0019"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_019HpgZwCzvex2SeySc6g8UL",
+    "input": {
+     "customer_id": "C-0020"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01Cgm6kWMyJmr7iHDKx7YFXf",
+    "input": {
+     "customer_id": "C-0021"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01ET8zK5mG5S6UN3gw7Hqz7V",
+    "input": {
+     "customer_id": "C-0022"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01KVxDvLVR42j8x6TCRMQD48",
+    "input": {
+     "customer_id": "C-0023"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_017bcfquEAW3pYWipJLJUk9t",
+    "input": {
+     "customer_id": "C-0024"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01AZNDnDwp8v6VvFUamF1rAZ",
+    "input": {
+     "customer_id": "C-0025"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01FkzD96bqyDAn9VB4fdKyD4",
+    "input": {
+     "customer_id": "C-0026"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01HjHoSqk1uKA8RR5WJEkm81",
+    "input": {
+     "customer_id": "C-0027"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_011XbqsqSqYrtQzsunFW8iXY",
+    "input": {
+     "customer_id": "C-0028"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_0135ihJCE5fT9Br7rHvkH3mx",
+    "input": {
+     "customer_id": "C-0029"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01BkzK3fX8PcFXbkuCLLrqiW",
+    "input": {
+     "customer_id": "C-0030"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_012LTmaHXWK2ycTaAiXJTnSR",
+    "input": {
+     "customer_id": "C-0031"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01TT9GFnRT7JyXV4YVc43HaR",
+    "input": {
+     "customer_id": "C-0032"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_019Zv6TaiwN9oHo3rJcNo4aY",
+    "input": {
+     "customer_id": "C-0033"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01TCHLrt1VHscNer7zwhaFPw",
+    "input": {
+     "customer_id": "C-0034"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_015H9fHaGuVbm83tFvD1F9s3",
+    "input": {
+     "customer_id": "C-0035"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01N1HmE5ShUkRyoN19rZA8H8",
+    "input": {
+     "customer_id": "C-0036"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01CCSj3CUy4isUtK8mP7Rfei",
+    "input": {
+     "customer_id": "C-0037"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01KEf8eNhJukSQdzb3aGaYkG",
+    "input": {
+     "customer_id": "C-0038"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01TARe1xhEuigrEgZM4LFUDf",
+    "input": {
+     "customer_id": "C-0039"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   },
+   {
+    "caller": {
+     "type": "direct"
+    },
+    "id": "toolu_01SqmVRUSbjYLZmVzkSPYWCq",
+    "input": {
+     "customer_id": "C-0040"
+    },
+    "name": "lookup_customer",
+    "type": "tool_use"
+   }
+  ],
+  "id": "msg_011Ch6xvaFiAdEZQYSiz8Kgm",
+  "model": "claude-haiku-5-5",
+  "role": "assistant",
+  "stop_reason": "tool_use",
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 1178,
+   "output_tokens": 2153,
+   "output_tokens_details": {
+    "thinking_tokens": 29
+   },
+   "service_tier": "standard",
+   "speed": "standard"
+  }
+ }
+}

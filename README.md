@@ -21,6 +21,7 @@ Requires [uv](https://docs.astral.sh/uv/) (it provides Python 3.12).
 
 ```bash
 make setup   # install dependencies and git hooks
+make demo    # six governed-agent scenarios in replay mode: no API key, no cost
 make check   # lint + tests
 make help    # all targets
 ```
