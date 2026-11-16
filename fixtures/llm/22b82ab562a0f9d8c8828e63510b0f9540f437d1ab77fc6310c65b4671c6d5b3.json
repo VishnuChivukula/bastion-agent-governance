@@ -1,0 +1,97 @@
+{
+ "fixture_sha256": "22b82ab562a0f9d8c8828e63510b0f9540f437d1ab77fc6310c65b4671c6d5b3",
+ "request": {
+  "max_tokens": 8000,
+  "messages": [
+   {
+    "content": "<agent_card>\n{\n  \"id\": \"marketing-copy-agent\",\n  \"name\": \"Marketing Copy Generator\",\n  \"owner\": \"brand-team@corp.example\",\n  \"business_purpose\": \"Drafts text for product brochures and newsletters. Every draft is edited and approved by the marketing team before publication. It does not generate images, audio or video and does not target individuals.\",\n  \"deployment_context\": \"Internal tool for the marketing team of a company in the EU.\",\n  \"affected_users\": \"Marketing staff; readers of published material.\",\n  \"data_categories\": [\n    \"product descriptions\",\n    \"brand guidelines\"\n  ],\n  \"personal_data\": false,\n  \"special_category_data\": false,\n  \"tools_requested\": [\n    \"read_brand_guidelines\",\n    \"save_draft\"\n  ],\n  \"autonomy_level\": \"suggest\",\n  \"models_used\": [\n    \"claude-haiku-5-5\"\n  ]\n}\n</agent_card>\n\nPropose the risk tier.",
+    "role": "user"
+   }
+  ],
+  "model": "claude-sonnet-5-5",
+  "output_config": {
+   "effort": "medium",
+   "format": {
+    "schema": {
+     "additionalProperties": false,
+     "description": "The Assessor's structured proposal (FR-02).",
+     "properties": {
+      "cited_provisions": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "confidence": {
+       "type": "number"
+      },
+      "likely_obligations": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "open_questions": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "rationale": {
+       "type": "string"
+      },
+      "tier": {
+       "enum": [
+        "prohibited",
+        "high",
+        "limited",
+        "minimal"
+       ],
+       "type": "string"
+      }
+     },
+     "required": [
+      "tier",
+      "rationale",
+      "cited_provisions",
+      "likely_obligations",
+      "confidence",
+      "open_questions"
+     ],
+     "type": "object"
+    },
+    "type": "json_schema"
+   }
+  },
+  "system": "You are the Assessor agent of Bastion. You propose a risk tier for an agent card.\n\nBastion is a governance control plane for AI agents. Before an agent may act, its owner submits an agent card and the agent is classified into one of four tiers under the EU AI Act: prohibited, high, limited or minimal.\n\nWork only from the agent card and the knowledge notes below. The notes are paraphrased summaries, not the legal text, and every regulatory reference is unverified: write \"[VERIFY]\" after each provision you cite (for example \"Annex III, creditworthiness [VERIFY]\"). Never quote legal text and never invent article, annex or clause numbers that are not in the notes. Classify the use described, not the technology. This is decision support for a human approver, not legal advice.\n\n<knowledge_notes>\n# EU AI Act, Annex III: high-risk use cases [VERIFY]\n\nParaphrased summary of the areas; not the legal text. Tier in Bastion: `high` (subject to Article 6).\n\nAreas listed, in outline [VERIFY]:\n- **Biometrics:** remote biometric identification, biometric categorisation by sensitive attributes, emotion recognition (where not prohibited).\n- **Critical infrastructure:** safety components in the management of digital infrastructure, road traffic, water, gas, heating, electricity.\n- **Education and vocational training:** deciding admission, evaluating learning outcomes, assessing the appropriate level of education, monitoring and detecting prohibited behaviour of students during tests.\n- **Employment and worker management:** recruitment and selection (placing targeted job adverts, analysing and filtering applications, evaluating candidates), decisions on promotion or termination, task allocation based on behaviour or traits, monitoring and evaluating performance.\n- **Access to essential private and public services:** evaluating creditworthiness or establishing a credit score of natural persons (with an exception for detecting financial fraud); risk assessment and pricing for life and health insurance; eligibility for public assistance benefits; triage of emergency calls.\n- **Law enforcement**, **migration, asylum and border control**, and **administration of justice and democratic processes:** a range of uses such as risk assessments of individuals and evaluating evidence.\n\nAssessment hints: credit-limit decisions about individual customers relate to creditworthiness. Tools that screen CVs relate to recruitment. Proctoring that analyses student behaviour during exams relates to education. Anti-money-laundering and fraud alert handling is close to the fraud-detection exception and to law-enforcement-adjacent uses, so the tier depends on who decides and on what basis: state the uncertainty.\n\n# EU AI Act, Article 5: prohibited practices [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `prohibited`.\n\nSome uses of AI are banned outright rather than regulated. In outline [VERIFY]:\n- Techniques that manipulate people below their awareness, or deceive them, in ways that distort behaviour and cause significant harm.\n- Exploiting vulnerabilities linked to age, disability or social or economic situation in ways that cause significant harm.\n- Social scoring: evaluating or classifying people over time from their social behaviour or personal traits, where the score leads to unfavourable treatment in unrelated contexts or treatment that is disproportionate.\n- Predicting that an individual will commit a crime based solely on profiling or personality traits.\n- Building facial recognition databases by untargeted scraping of images.\n- Inferring emotions of people in the workplace or in education, except for medical or safety reasons.\n- Biometric categorisation that infers sensitive characteristics such as race, political opinions or sexual orientation.\n- Real-time remote biometric identification in publicly accessible spaces for law enforcement, outside narrow exceptions.\n\nAssessment hints: check the purpose, not the technology. A system that measures employee emotion to manage productivity is the workplace emotion case. A public-authority scheme that ranks citizens' general trustworthiness is the social scoring case.\n\n# EU AI Act, Article 50: transparency obligations [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `limited` (transparency duties, no high-risk regime).\n\nFor certain systems that are not high-risk, the main duty is to tell people what they are dealing with. In outline [VERIFY]:\n- People interacting with an AI system (for example a chatbot) are informed that it is an AI system, unless that is obvious from the context.\n- Synthetic audio, image, video or text output is marked as artificially generated in a machine-readable way.\n- Deployers of emotion recognition or biometric categorisation systems (where permitted) inform the people exposed to them.\n- Deployers disclose that deepfake content has been artificially generated or manipulated; a lighter duty applies to evidently artistic or satirical work.\n\nSystems with no specific obligation under the Act (for example spam filters, internal drafting aids with human review, developer tooling) are treated as `minimal` in Bastion [VERIFY].\n\nAssessment hints: a customer-facing assistant that only answers questions and takes no decisions about the person is typically a transparency case. Generating synthetic likenesses of real people is the deepfake case.\n\n# EU AI Act, Article 6: when a system is high-risk [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `high`.\n\nTwo routes lead to the high-risk class [VERIFY]:\n1. The AI system is a safety component of a product (or is itself a product) covered by the EU product-safety legislation listed in Annex I, and that product needs a third-party conformity assessment.\n2. The AI system is used for one of the purposes listed in Annex III.\n\nA system listed in Annex III may fall outside the high-risk class if it does not pose a significant risk to health, safety or fundamental rights, for example because it only performs a narrow procedural task, improves the result of a completed human activity, detects decision patterns without replacing the human assessment, or does preparatory work [VERIFY]. That exception does not apply when the system profiles natural persons [VERIFY]. A provider relying on the exception is expected to document the reasoning [VERIFY].\n\nAssessment hints: ask what decision about a person the system makes or materially influences. Human review of every output lowers the operational risk but does not by itself take an Annex III use out of the high-risk class. Autonomy level, data sensitivity and who is affected all matter to the rationale.\n</knowledge_notes>\n\nReturn:\n- tier: the single best-fitting tier.\n- rationale: three to six sentences tying facts in the card to the notes.\n- cited_provisions: the provisions relied on, each ending with [VERIFY].\n- likely_obligations: the main obligations that would follow, in plain words, for the organisation deploying the agent. Say \"supports evidence for\", never \"ensures compliance\".\n- confidence: 0 to 1. Lower it when the card leaves the decisive facts open.\n- open_questions: what the human approver should ask the owner before signing off."
+ },
+ "response": {
+  "content": [
+   {
+    "text": "{\"tier\":\"minimal\",\"rationale\":\"The agent drafts brochure and newsletter text for an internal marketing team, and every draft is edited and approved by a human before publication. It operates at 'suggest' autonomy with only two tools (read brand guidelines, save draft). It processes no personal or special-category data, makes no decisions about individuals and does not target people, so no Annex III area (employment, credit, education, etc.) is engaged and nothing in the Article 5 prohibited practices applies. It generates text only, no images, audio or video, and the notes treat internal drafting aids with human review as minimal. A possible Article 50 point is machine-readable marking of synthetic text, but the human editing and approval step and the internal use make a specific obligation unlikely to be triggered on these facts; this is worth confirming rather than assuming.\",\"cited_provisions\":[\"Article 50, transparency obligations and the minimal-tier treatment of internal drafting aids with human review [VERIFY]\",\"Annex III, high-risk areas (not engaged: no decisions about individuals) [VERIFY]\",\"Article 5, prohibited practices (not engaged: no manipulation, scoring or biometrics) [VERIFY]\",\"Article 6, routes to high-risk classification (neither route appears to apply) [VERIFY]\"],\"likely_obligations\":[\"Keep the human review and approval step before publication, as this supports evidence for the minimal classification\",\"Keep the agent card current and re-submit it if scope changes (for example personal data, audience targeting, or image/audio/video generation)\",\"Check with legal whether published text needs any marking or disclosure as AI-generated under the transparency rules, given the human editing\",\"Keep basic records of the tool's use and the approval step as evidence for governance review\"],\"confidence\":0.9,\"open_questions\":[\"Is any published text released without human editing or approval, for example automated newsletter sends?\",\"Will the agent ever be used to personalise content for individual readers or segments, or be fed customer or employee data?\",\"Does the company intend to publish the text without disclosing AI involvement, and has legal assessed whether any synthetic text marking duty applies?\",\"Are there plans to extend the tool to images, audio, video or likenesses of real people (deepfake rules)?\",\"Is the marketing content ever used in contexts such as job adverts, credit or insurance offers that could touch Annex III areas?\"]}",
+    "type": "text"
+   }
+  ],
+  "id": "msg_011Ch76HEXCpG8NZPcn1dQet",
+  "model": "claude-sonnet-5-5",
+  "role": "assistant",
+  "stop_reason": "end_turn",
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 3132,
+   "output_tokens": 775,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "service_tier": "standard",
+   "speed": "standard"
+  }
+ }
+}

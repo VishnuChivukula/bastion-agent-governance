@@ -1,0 +1,20 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: marketing-copy-agent
+name: Marketing Copy Generator
+owner: brand-team@corp.example
+business_purpose: Drafts text for product brochures and newsletters. Every draft is edited and approved
+  by the marketing team before publication. It does not generate images, audio or video and does not target
+  individuals.
+deployment_context: Internal tool for the marketing team of a company in the EU.
+affected_users: Marketing staff; readers of published material.
+data_categories:
+- product descriptions
+- brand guidelines
+personal_data: false
+special_category_data: false
+tools_requested:
+- read_brand_guidelines
+- save_draft
+autonomy_level: suggest
+models_used:
+- claude-haiku-5-5

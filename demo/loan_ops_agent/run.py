@@ -37,7 +37,7 @@ from bastion.gateway.server import RUN_HEADER, build_mcp_app
 from bastion.llm import GovernedAnthropic
 from bastion.llm.governance import GovernanceHook
 from bastion.models import AuditEvent
-from bastion.seed import DEMO_AGENT_ID, seed_demo
+from bastion.seed import DEMO_AGENT_ID, seed_demo_classified
 from demo.data.generate import build as build_demo_data
 from demo.loan_ops_agent.graph import SYSTEM_STANDARD, SYSTEM_TRUSTING, AgentDeps, build_graph
 from demo.loan_ops_agent.scenarios import BY_ID, SCENARIOS, Scenario
@@ -339,7 +339,8 @@ class DemoEnvironment:
         self.demo_db = workdir / "demo.db"
         build_demo_data(self.demo_db)
         self.engine = make_engine(workdir / "bastion.db")
-        seed_demo(self.engine)
+        # UC-01: the demo agent is registered, classified by two agents and signed off.
+        self.registration = seed_demo_classified(self.engine, self.settings)
         self.gateway = Gateway(self.engine, demo_db=self.demo_db)
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
@@ -391,6 +392,26 @@ def reset_demo_state(gateway: Gateway, demo_db: Path, actor: str = APPROVER) -> 
     gateway.approvals.revoke_open(DEMO_AGENT_ID, reason="demo reset", actor=actor)
 
 
+def print_registration(registration) -> None:
+    """UC-01 as it happened when the demo environment was set up."""
+    if registration is None:
+        return
+    classification, signoff = registration
+    proposed = classification.proposed
+    print("\n━━ UC-01 · Register and classify the agent " + "━" * 20)
+    print(f"   ASSESSOR      proposes tier {classification.assessment.tier.upper()} "
+          f"(confidence {classification.assessment.confidence:.2f})")  # fmt: skip
+    for provision in proposed.cited_provisions[:2]:
+        print(f"                 cites: {provision}")
+    print(f"   REVIEWER      {classification.review.verdict}s "
+          f"(would sign off {classification.review.recommended_tier})")  # fmt: skip
+    if classification.revised is not None:
+        print(f"   ASSESSOR      revised once → {classification.revised.tier.upper()}")
+    print(f"   SIGN-OFF      tier {signoff.final_tier.upper()} signed off by the script; "
+          f"policy: {signoff.policy_source} (template tier {signoff.template})")  # fmt: skip
+    print(f"   TOKEN         issued once, stored as a hash · policy {signoff.policy_hash[:16]}…")
+
+
 def print_result(result: RunResult) -> None:
     scenario = result.scenario
     print(f"\n━━ {scenario.use_case} · {scenario.title} " + "━" * 20)
@@ -408,14 +429,15 @@ async def run_all(ids: list[str], settings: Settings | None = None) -> list[RunR
     settings = settings or get_settings()
     scenarios = [BY_ID[i] for i in ids] if ids else SCENARIOS
     results = []
+    if settings.mode == "record" and not ids:
+        for stale in settings.fixtures_dir.glob("*.json"):  # full re-record: drop old ones
+            stale.unlink()
     with (
         tempfile.TemporaryDirectory(prefix="bastion-demo-") as tmp,
         DemoEnvironment(Path(tmp), settings) as env,
     ):
         print(f"Bastion demo · mode={settings.mode} · gateway on 127.0.0.1:{env.port}")
-        if settings.mode == "record" and not ids:
-            for stale in settings.fixtures_dir.glob("*.json"):  # full re-record: drop old ones
-                stale.unlink()
+        print_registration(env.registration)
         await env.runner.warm_up()
         for scenario in scenarios:
             env.reset_between_scenarios()

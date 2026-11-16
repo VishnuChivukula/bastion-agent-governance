@@ -11,14 +11,14 @@
 | S3 Oversight | ☑ | see `git log` (`feat: oversight`) | args-bound single-use grants, TTL, revoke, kill switch (agent + global), incident rules + lifecycle, model token/cost budgets; UC-04..UC-07 pass end to end in replay; RT-13..RT-23 covered in pytest |
 | S4 API + console | ☑ | see `git log` (`feat: control-plane API`) | FastAPI control plane with the gateway mounted at `/mcp`; routers for agents, kill switch, usage, policies (versions, diff, activate), approvals, incidents, runs, audit (events, verify), overview; evidence route answers 501 until S7; fail-closed passcode guard (ADR-008); Streamlit console with Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry, Policies; `make serve` via honcho; 345 tests, 95% coverage |
 | S8 Package + deploy | ☑ | see `git log` (`ci: Dockerfile`) | Dockerfile (python:3.12-slim, uv, non-root), `docker-compose.yml` (`make up`), `railway.json`, `scripts/smoke.py` (`make smoke`, also the container HEALTHCHECK); CI `docker` job builds the image, waits for health and runs UC-03 inside the container. Playwright/Chromium is added to the image in S7 with the feature that needs it |
-| S9a Ship-now polish | ☐ | | |
-| S5 Registry + assessor | ☐ | | |
+| S9a Ship-now polish | ☑ | see `git log` (`fix: reviewer findings`), tag `v0.1.0` | README v1 (doc-writer, facts checked); fresh clone runs `make demo` with no key; release v0.1.0 published; CI green (check, gitleaks, docker) |
+| S5 Registry + assessor | ☑ | see `git log` (`feat: registry classification`) | agent card model, `knowledge/` notes (`[VERIFY]`), Assessor → Reviewer → revise-once graph with JSON-schema structured output, durable sign-off (override needs a reason, `prohibited` blocks, tier template or agent-specific policy, token once), API routes, console Registry page, 12 synthetic cards + 3 seeded errors recorded (28 fixtures); UC-01 passes in replay and opens `make demo`; assessor suite: 12/12 tiers, 3/3 seeded errors caught; 375 tests |
 | S6 Evals + CI gate | ☐ | | |
 | S7 Evidence pack | ☐ | | |
 | S9b Showcase | ☐ | | |
 
 ## Next exact step
-S9a: README v1 (doc-writer), fix S4 reviewer P0/P1 findings, fresh-clone `make demo` check, `gh release create v0.1.0 --generate-notes`. Then S5, S6, S7, S9b.
+S6: `evals/redteam/*.yaml` (RT-01..RT-25), `evals/benign/*.yaml` (B-01..B-15), `evals/run.py` (suites A/B through the real gateway, suite C via `evals/assessor_suite.py`), `evals/thresholds.yaml`, `evals/results/latest.json`, `scripts/update_readme_results.py`, `make eval`, CI `eval` job, console Red-Team page. Then S7, S9b.
 
 ## Decisions (date — decision — why)
 - 2026-11-16 — The project has its own git repo (`git init` in the project folder) — the home folder is itself a git repo and must never be touched or pushed.
@@ -59,6 +59,10 @@ S9a: README v1 (doc-writer), fix S4 reviewer P0/P1 findings, fresh-clone `make d
 - 2026-11-16 — S8: the public port serves the console only; the API and gateway bind loopback inside the container (compose opts in to publishing :8000 for local use) — the smallest public surface for a demo deployment. Railway's health check uses the console's `/_stcore/health`; the container HEALTHCHECK checks both processes.
 - 2026-11-16 — Reviewer pass on S0–S4: no P0; three P1 fixed before release — (1) the demo reset no longer releases the global kill switch and runs answer 409 while it is active; (2) the policy API rejects changes to `downstream` and tool servers start with a minimal environment, so a passcode holder cannot make the gateway run an arbitrary command or read secrets; (3) `approver: human` is refused without a configured passcode and the console hides the option. P2 fixed: rejected-passcode audit events are throttled, Overview caches chain verification for 5 s (`/audit/verify` always recomputes), approval decisions are one conditional UPDATE, run errors shown publicly carry only the error type, whitespace passcodes are ignored, a test walks the OpenAPI spec to prove every POST route is guarded, Run Scenario warns when the policy in force is not the seed policy.
 - 2026-11-16 — README regulatory summary lists only capabilities that exist; rows for classification, evals and evidence are added with their slices.
+- 2026-11-17 — S5: the classification graph ends with a proposal and sign-off is a durable DB state, not a graph interrupt; structured output via `output_config.format` because the smart model rejects forced tool choice; retrieval passes all four notes; tier templates carry no tool rules (ADR-009).
+- 2026-11-17 — In replay mode the API and `make demo` seed the demo agent through the real UC-01 flow (fixtures); other modes seed it directly so start-up never calls a model. `seed_demo` (direct) stays for unit tests.
+- 2026-11-17 — `make record` now also records the assessor suite; a full re-record deletes all fixtures first, then records UC-01, the six scenarios and the suite.
+- 2026-11-17 — Gold tiers live in `evals/assessor/gold.yaml`, apart from the cards, so the Assessor never sees them.
 
 ## Human actions needed
 - **Railway deploy** (`kit-local/START_HERE.md` step 7): create the project from the GitHub repo (it picks up `railway.json`), set `BASTION_PASSCODE` to a value of your choice (leave `ANTHROPIC_API_KEY` unset: replay mode), generate a public domain, then paste the URL with `prompts/DEPLOY_DONE.md`. Not blocking: the remaining slices continue without it.

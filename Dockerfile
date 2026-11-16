@@ -22,6 +22,8 @@ COPY demo ./demo
 COPY policies ./policies
 COPY config ./config
 COPY fixtures ./fixtures
+COPY knowledge ./knowledge
+COPY evals ./evals
 COPY scripts ./scripts
 COPY Procfile LICENSE ./
 RUN uv sync --locked --no-dev

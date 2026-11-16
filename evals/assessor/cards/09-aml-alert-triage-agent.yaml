@@ -1,0 +1,22 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: aml-alert-triage-agent
+name: AML Alert Triage Assistant
+owner: financial-crime@bank.example
+business_purpose: Summarises transaction-monitoring alerts and the customer's recent activity for anti-money-laundering
+  analysts and suggests a priority. An analyst reads every alert and takes every decision, including whether
+  to file a report; the agent cannot close alerts.
+deployment_context: Financial crime compliance team of a bank in the EU.
+affected_users: Customers whose transactions raised alerts; analysts.
+data_categories:
+- transaction histories
+- customer identity data
+- alert details
+personal_data: true
+special_category_data: false
+tools_requested:
+- get_alert
+- get_customer_transactions
+- draft_alert_summary
+autonomy_level: suggest
+models_used:
+- claude-haiku-5-5

@@ -1,0 +1,16 @@
+# Default policy template for agents signed off at tier `minimal` (FR-05).
+# A template is a starting posture: budgets, incident rules and NO tool rules, so every tool
+# call is denied (default deny) until an owner adds reviewed rules as a new policy version.
+# An agent-specific policy at policies/<agent-id>.yaml takes precedence over the template.
+agent: __AGENT_ID__
+version_note: "tier template: minimal"
+budgets:
+  max_tool_calls_per_session: 120
+  max_tokens_per_session: 800000
+  max_cost_usd_per_day: 20.0
+incident_rules:
+  - id: IR-T1
+    when: "deny_count_10m >= 10"
+    severity: medium
+
+rules: []

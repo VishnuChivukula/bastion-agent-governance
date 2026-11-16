@@ -1,0 +1,22 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: insurance-pricing-agent
+name: Life and Health Insurance Pricing Assistant
+owner: underwriting@insurer.example
+business_purpose: Assesses the risk of individual applicants for life and health insurance from their
+  application and medical questionnaire, and sets the premium offered. Underwriters review only cases
+  the agent flags.
+deployment_context: Underwriting department of an insurer in the EU.
+affected_users: Insurance applicants (natural persons).
+data_categories:
+- health questionnaire answers
+- age and lifestyle data
+- claims history
+personal_data: true
+special_category_data: true
+tools_requested:
+- read_application
+- assess_risk
+- set_premium
+autonomy_level: act_with_approval
+models_used:
+- claude-haiku-5-5

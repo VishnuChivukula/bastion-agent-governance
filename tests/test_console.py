@@ -143,3 +143,24 @@ def test_describe_covers_every_event_type_in_a_real_log(server):
     assert describe({"event_type": "something_new", "payload": {}}) == ("•", "something new")
     assert short_hash(None) == "-" and short_hash("abcdef", 3) == "abc…"
     assert clock("2026-11-16T10:11:12.000000+00:00") == "10:11:12"
+
+
+def test_registry_shows_the_classification_record(server, monkeypatch):
+    at = open_page(server, "registry", monkeypatch)
+    text = text_of(at)
+    assert "Assessor proposes" in text and "Reviewer" in text and "[VERIFY]" in text
+    assert any("Signed off as **high**" in s.value for s in at.success)
+
+
+def test_register_and_sign_off_from_the_console(server, monkeypatch):
+    at = open_page(server, "registry", monkeypatch, PASSCODE)
+    labels = [b.label for b in at.button]
+    assert "Submit card and classify" in labels
+    at.selectbox[0].set_value("Code Review Assistant · code-review-agent").run()
+    next(b for b in at.button if b.label == "Submit card and classify").click().run()
+    record = server.anon.get("/registry/agents/code-review-agent").json()
+    assert record["status"] == "awaiting_signoff" and record["proposed_tier"] == "minimal"
+    at.button(key="signoff-code-review-agent").click().run()
+    assert server.anon.get("/agents/code-review-agent").json()["status"] == "active"
+    assert any("shown once" in w.value for w in at.warning)
+    assert at.code  # the token

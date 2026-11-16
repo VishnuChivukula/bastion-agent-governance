@@ -1,0 +1,19 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: synthetic-spokesperson-video-agent
+name: Synthetic Spokesperson Video Tool
+owner: campaigns@corp.example
+business_purpose: Generates realistic marketing videos in which a synthetic likeness and voice of a real
+  brand ambassador, used with their consent, appears to speak scripted lines they never recorded.
+deployment_context: Marketing campaigns of a consumer company in the EU, published on social media.
+affected_users: The brand ambassador; the general public viewing the videos.
+data_categories:
+- video and voice samples of the ambassador
+- campaign scripts
+personal_data: true
+special_category_data: false
+tools_requested:
+- generate_video
+- publish_draft
+autonomy_level: act_with_approval
+models_used:
+- claude-haiku-5-5

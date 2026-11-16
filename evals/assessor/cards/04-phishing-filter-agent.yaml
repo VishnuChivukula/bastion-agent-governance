@@ -1,0 +1,18 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: phishing-filter-agent
+name: Internal Phishing Filter
+owner: it-security@corp.example
+business_purpose: Classifies inbound company email as likely spam or phishing and moves it to a quarantine
+  folder that the recipient can review and release.
+deployment_context: Internal mail gateway of a company in the EU.
+affected_users: Employees receiving email.
+data_categories:
+- email headers and bodies
+personal_data: true
+special_category_data: false
+tools_requested:
+- classify_email
+- move_to_quarantine
+autonomy_level: autonomous
+models_used:
+- claude-haiku-5-5

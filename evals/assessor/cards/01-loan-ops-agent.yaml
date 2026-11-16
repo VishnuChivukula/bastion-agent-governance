@@ -1,0 +1,25 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: loan-ops-agent
+name: Loan Ops Agent
+owner: lending-operations@bank.example
+business_purpose: Helps retail lending operations staff look up customers, change customer credit limits
+  on request and send internal emails. Credit-limit changes above a threshold go to a human approver.
+deployment_context: Internal back-office tool at a retail bank in the EU. Operations staff give it tasks
+  in natural language; it acts on the bank's customer system through tools.
+affected_users: Retail banking customers (natural persons) whose credit limits are changed; operations
+  staff.
+data_categories:
+- customer identity and contact details
+- account and IBAN data
+- credit limits
+- free-text service notes
+personal_data: true
+special_category_data: false
+tools_requested:
+- lookup_customer
+- get_customer_notes
+- update_credit_limit
+- send_email
+autonomy_level: act_with_approval
+models_used:
+- claude-haiku-5-5

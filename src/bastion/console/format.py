@@ -82,7 +82,26 @@ def describe(event: dict[str, Any]) -> tuple[str, str]:
         ),
         "run_started": lambda: ("🏁", f"run started · {p.get('scenario')} · {p.get('run_id')}"),
         "run_status": lambda: ("•", f"run {p.get('run_id')} → {p.get('status')}"),
-        "agent_registered": lambda: ("🤖", f"agent registered · tier {p.get('tier')}"),
+        "agent_registered": lambda: (
+            "🤖",
+            f"agent registered · status {p.get('status')}"
+            + (f" · tier {p['tier']}" if p.get("tier") else ""),
+        ),
+        "agent_card_submitted": lambda: (
+            "🪪",
+            f"agent card submitted · autonomy {p.get('autonomy_level')} · "
+            f"{len(p.get('tools_requested') or [])} tools requested",
+        ),
+        "assessment_completed": lambda: (
+            "⚖️",
+            f"classified · assessor {p.get('assessor_tier')} · reviewer "
+            f"{p.get('reviewer_verdict')} · proposed {p.get('proposed_tier')}",
+        ),
+        "signoff_recorded": lambda: (
+            "🖊️",
+            f"sign-off · tier {p.get('final_tier')} · {p.get('outcome')}"
+            + (" · OVERRIDE" if p.get("overridden") else ""),
+        ),
         "token_issued": lambda: ("🔑", "agent token issued (stored hashed)"),
         "auth_failed": lambda: ("🚫", f"gateway authentication failed · {p.get('reason')}"),
         "passcode_rejected": lambda: ("🚫", "console passcode rejected"),

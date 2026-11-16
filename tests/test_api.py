@@ -37,7 +37,7 @@ def test_healthz_meta_and_openapi(api):
 
 def test_agent_is_seeded_with_policy(api):
     agents = api.anon.get("/agents").json()
-    assert [a["id"] for a in agents] == [AGENT]
+    assert AGENT in [a["id"] for a in agents]
     agent = api.anon.get(f"/agents/{AGENT}").json()
     assert agent["tier"] == "high" and agent["policy_version"] >= 1 and agent["policy_hash"]
     assert "token_hash" not in agent
@@ -387,3 +387,68 @@ def test_a_second_run_is_refused_while_one_is_in_progress(tmp_path):
         second = server.anon.post("/runs", json={"scenario": "uc02"})
         assert first.status_code == 202 and second.status_code == 409
         assert server.wait(first.json()["id"])["status"] in ("completed", "halted")
+
+
+# --- registry (UC-01) ----------------------------------------------------------------------------
+def test_seeded_agent_has_its_classification_on_record(api):
+    record = api.anon.get(f"/registry/agents/{AGENT}").json()
+    assert record["final_tier"] == "high" and record["signed_off_by"]
+    assert record["classification"]["assessment"]["tier"] == "high"
+    assert record["classification"]["review"]["verdict"] in ("agree", "disagree")
+    assert record["card"]["autonomy_level"] == "act_with_approval"
+    assert api.anon.get("/registry/agents/nope").status_code == 404
+    assert len(api.anon.get("/registry/samples").json()) == 12
+
+
+def test_register_classify_and_sign_off_through_the_api(api):
+    samples = {c["id"]: c for c in api.anon.get("/registry/samples").json()}
+    card = samples["customer-faq-bot"]
+    assert api.anon.post("/registry/agents", json=card).status_code == 401
+    created = api.admin.post("/registry/agents", json=card)
+    assert created.status_code == 201
+    record = created.json()
+    assert record["status"] == "awaiting_signoff" and record["proposed_tier"] == "limited"
+    listed = {a["id"]: a for a in api.anon.get("/agents").json()}["customer-faq-bot"]
+    assert listed["has_token"] is False and listed["policy_version"] is None
+    assert api.admin.post("/registry/agents", json=card).status_code == 409
+
+    no_reason = api.admin.post("/registry/agents/customer-faq-bot/signoff", json={"tier": "high"})
+    assert no_reason.status_code == 409 and "needs a reason" in no_reason.json()["detail"]
+    signed = api.admin.post("/registry/agents/customer-faq-bot/signoff", json={"tier": "limited"})
+    assert signed.status_code == 200
+    body = signed.json()
+    assert body["status"] == "active" and body["policy_source"] == "template" and body["token"]
+    # the new agent can reach the gateway with its token; its template denies everything
+    reply = api.anon.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+        headers={"Authorization": f"Bearer {body['token']}",
+                 "Accept": "application/json, text/event-stream"},
+    )  # fmt: skip
+    assert reply.status_code != 401
+    again = api.admin.post("/registry/agents/customer-faq-bot/signoff", json={"tier": "limited"})
+    assert again.status_code == 409
+    assert api.admin.post("/registry/agents/nope/signoff", json={"tier": "high"}).status_code == 404
+
+
+def test_prohibited_card_is_blocked_through_the_api(api):
+    samples = {c["id"]: c for c in api.anon.get("/registry/samples").json()}
+    api.admin.post("/registry/agents", json=samples["citizen-trust-score-agent"])
+    signed = api.admin.post(
+        "/registry/agents/citizen-trust-score-agent/signoff", json={"tier": "prohibited"}
+    ).json()
+    assert signed["status"] == "blocked" and signed["token"] is None
+    agent = api.anon.get("/agents/citizen-trust-score-agent").json()
+    assert agent["status"] == "blocked" and agent["has_token"] is False
+
+
+def test_unrecorded_card_in_replay_is_explained_and_can_be_retried(api):
+    samples = {c["id"]: c for c in api.anon.get("/registry/samples").json()}
+    custom = {**samples["code-review-agent"], "id": "my-own-agent"}
+    custom["business_purpose"] = "Something that was never recorded as a fixture, at all."
+    refused = api.admin.post("/registry/agents", json=custom)
+    assert refused.status_code == 409 and "replay mode" in refused.json()["detail"]
+    assert api.anon.get("/agents/my-own-agent").json()["status"] == "draft"
+    assert api.admin.post("/registry/agents", json=custom).status_code == 409  # still a draft
+    bad = api.admin.post("/registry/agents", json={**custom, "id": "Not A Slug"})
+    assert bad.status_code == 422

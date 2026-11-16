@@ -25,6 +25,7 @@ demo: ## Run the scripted scenarios in replay mode (no API key needed)
 
 record: ## Re-record LLM fixtures (needs ANTHROPIC_API_KEY; calls the API)
 	@BASTION_MODE=record uv run python -m demo.loan_ops_agent.run
+	@BASTION_MODE=record uv run python -m evals.assessor_suite
 
 eval: ## Run red-team, benign and assessor suites
 	@echo "not yet: S6"

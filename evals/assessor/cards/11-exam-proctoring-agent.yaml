@@ -1,0 +1,20 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: exam-proctoring-agent
+name: Online Exam Proctoring Analyser
+owner: assessment-office@university.example
+business_purpose: Watches students through their webcam during online exams, analyses gaze and behaviour,
+  and flags suspected cheating. Flags feed into decisions on whether an exam result stands.
+deployment_context: A university in the EU, for all remotely sat exams.
+affected_users: Students sitting exams.
+data_categories:
+- webcam video
+- screen activity
+- behaviour flags
+personal_data: true
+special_category_data: false
+tools_requested:
+- analyse_exam_session
+- flag_incident
+autonomy_level: autonomous
+models_used:
+- claude-haiku-5-5

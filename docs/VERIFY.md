@@ -36,8 +36,14 @@ Bastion supports evidence for obligations; it does not make a system compliant. 
 | 26 | docs/GOVERNANCE_MAPPING.md | ISO/IEC 42001 clause 10.2 | Nonconformity and corrective action | unverified |
 | 27 | docs/GOVERNANCE_MAPPING.md | DORA | ICT logging and ICT incident management expectations (optional mention) | unverified |
 | 28 | docs/USE_CASES.md (UC-01), docs/SPEC.md | EU AI Act Annex III | A credit-related agent (creditworthiness / credit limits) falls under a high-risk use case | unverified |
-| 30 | README.md (Governance mapping summary) | EU AI Act Art. 9, 10, 12, 14, 26, 72, 73; GDPR Art. 5(1)(c); NIST AI RMF functions; ISO/IEC 42001 clauses 6.1, 7.5, 8.1, 8.2, 8.3, 9.1, 10.2; provider vs deployer | Repeats rows 3–8, 10, 11, 15, 16, 18, 20–23, 25, 26 for the capabilities built so far | unverified |
+| 30 | README.md (Governance mapping summary) | EU AI Act Art. 5, 6, Annex III, Art. 9, 10, 12, 14, 26, 72, 73; GDPR Art. 5(1)(c); NIST AI RMF functions; ISO/IEC 42001 clauses 6.1, 7.5, 8.1, 8.2, 8.3, 9.1, 10.2; provider vs deployer | Repeats rows 3–8, 10, 11, 15, 16, 18, 20–23, 25, 26 for the capabilities built so far | unverified |
 | 29 | docs/EVALS.md (Suite C) | EU AI Act Art. 5, Art. 6, Annex III, Art. 50 | Gold tiers for the 12 synthetic agent cards | unverified |
+| 31 | knowledge/eu-ai-act-art5-prohibited.md | EU AI Act Art. 5 | Outline of the prohibited practices (manipulation, exploiting vulnerabilities, social scoring, crime prediction by profiling, untargeted facial scraping, emotion inference at work and in education, sensitive biometric categorisation, real-time remote biometric identification) | unverified |
+| 32 | knowledge/eu-ai-act-art6-high-risk.md | EU AI Act Art. 6 and Annex I | Two routes to high-risk; the exception for narrow procedural, preparatory and similar tasks; the exception not applying to profiling; documentation of reliance on the exception | unverified |
+| 33 | knowledge/eu-ai-act-annex3-use-cases.md | EU AI Act Annex III | Outline of the listed areas, incl. creditworthiness (with the fraud-detection exception), life and health insurance pricing, recruitment, education and exam monitoring | unverified |
+| 34 | knowledge/eu-ai-act-art50-transparency.md | EU AI Act Art. 50 | Disclosure of AI interaction, marking of synthetic content, deepfake disclosure, informing people exposed to emotion recognition; "minimal" as Bastion's label for systems with no specific obligation | unverified |
+| 35 | evals/assessor/gold.yaml | EU AI Act Art. 5, Art. 6, Annex III, Art. 50 | Gold tier per synthetic card (same as row 29, now in the repo as data) | unverified |
+| 36 | fixtures/llm/*.json, registry classification records | Provisions cited by the Assessor and Reviewer agents | Model-written citations; each is required to carry `[VERIFY]` and is decision support only | unverified |
 
 No ISO/IEC 42001 Annex A control identifiers are cited anywhere in this repository; references are at clause level only.
 

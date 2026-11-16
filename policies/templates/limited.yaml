@@ -1,0 +1,18 @@
+# Default policy template for agents signed off at tier `limited` (FR-05).
+# A template is a starting posture: budgets, incident rules and NO tool rules, so every tool
+# call is denied (default deny) until an owner adds reviewed rules as a new policy version.
+# An agent-specific policy at policies/<agent-id>.yaml takes precedence over the template.
+agent: __AGENT_ID__
+version_note: "tier template: limited"
+budgets:
+  max_tool_calls_per_session: 60
+  max_tokens_per_session: 400000
+  max_cost_usd_per_day: 10.0
+incident_rules:
+  - id: IR-T1
+    when: "deny_count_10m >= 5"
+    severity: medium
+  - id: IR-T2
+    when: "category == 'exfiltration'"
+    severity: high
+rules: []

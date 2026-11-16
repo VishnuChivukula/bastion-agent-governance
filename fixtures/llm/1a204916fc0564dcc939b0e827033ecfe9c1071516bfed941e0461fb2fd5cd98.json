@@ -1,0 +1,97 @@
+{
+ "fixture_sha256": "1a204916fc0564dcc939b0e827033ecfe9c1071516bfed941e0461fb2fd5cd98",
+ "request": {
+  "max_tokens": 8000,
+  "messages": [
+   {
+    "content": "<agent_card>\n{\n  \"id\": \"loan-ops-agent\",\n  \"name\": \"Loan Ops Agent\",\n  \"owner\": \"lending-operations@bank.example\",\n  \"business_purpose\": \"Helps retail lending operations staff look up customers, change customer credit limits on request and send internal emails. Credit-limit changes above a threshold go to a human approver.\",\n  \"deployment_context\": \"Internal back-office tool at a retail bank in the EU. Operations staff give it tasks in natural language; it acts on the bank's customer system through tools.\",\n  \"affected_users\": \"Retail banking customers (natural persons) whose credit limits are changed; operations staff.\",\n  \"data_categories\": [\n    \"customer identity and contact details\",\n    \"account and IBAN data\",\n    \"credit limits\",\n    \"free-text service notes\"\n  ],\n  \"personal_data\": true,\n  \"special_category_data\": false,\n  \"tools_requested\": [\n    \"lookup_customer\",\n    \"get_customer_notes\",\n    \"update_credit_limit\",\n    \"send_email\"\n  ],\n  \"autonomy_level\": \"act_with_approval\",\n  \"models_used\": [\n    \"claude-haiku-5-5\"\n  ]\n}\n</agent_card>\n\nPropose the risk tier.",
+    "role": "user"
+   }
+  ],
+  "model": "claude-sonnet-5-5",
+  "output_config": {
+   "effort": "medium",
+   "format": {
+    "schema": {
+     "additionalProperties": false,
+     "description": "The Assessor's structured proposal (FR-02).",
+     "properties": {
+      "cited_provisions": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "confidence": {
+       "type": "number"
+      },
+      "likely_obligations": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "open_questions": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "rationale": {
+       "type": "string"
+      },
+      "tier": {
+       "enum": [
+        "prohibited",
+        "high",
+        "limited",
+        "minimal"
+       ],
+       "type": "string"
+      }
+     },
+     "required": [
+      "tier",
+      "rationale",
+      "cited_provisions",
+      "likely_obligations",
+      "confidence",
+      "open_questions"
+     ],
+     "type": "object"
+    },
+    "type": "json_schema"
+   }
+  },
+  "system": "You are the Assessor agent of Bastion. You propose a risk tier for an agent card.\n\nBastion is a governance control plane for AI agents. Before an agent may act, its owner submits an agent card and the agent is classified into one of four tiers under the EU AI Act: prohibited, high, limited or minimal.\n\nWork only from the agent card and the knowledge notes below. The notes are paraphrased summaries, not the legal text, and every regulatory reference is unverified: write \"[VERIFY]\" after each provision you cite (for example \"Annex III, creditworthiness [VERIFY]\"). Never quote legal text and never invent article, annex or clause numbers that are not in the notes. Classify the use described, not the technology. This is decision support for a human approver, not legal advice.\n\n<knowledge_notes>\n# EU AI Act, Annex III: high-risk use cases [VERIFY]\n\nParaphrased summary of the areas; not the legal text. Tier in Bastion: `high` (subject to Article 6).\n\nAreas listed, in outline [VERIFY]:\n- **Biometrics:** remote biometric identification, biometric categorisation by sensitive attributes, emotion recognition (where not prohibited).\n- **Critical infrastructure:** safety components in the management of digital infrastructure, road traffic, water, gas, heating, electricity.\n- **Education and vocational training:** deciding admission, evaluating learning outcomes, assessing the appropriate level of education, monitoring and detecting prohibited behaviour of students during tests.\n- **Employment and worker management:** recruitment and selection (placing targeted job adverts, analysing and filtering applications, evaluating candidates), decisions on promotion or termination, task allocation based on behaviour or traits, monitoring and evaluating performance.\n- **Access to essential private and public services:** evaluating creditworthiness or establishing a credit score of natural persons (with an exception for detecting financial fraud); risk assessment and pricing for life and health insurance; eligibility for public assistance benefits; triage of emergency calls.\n- **Law enforcement**, **migration, asylum and border control**, and **administration of justice and democratic processes:** a range of uses such as risk assessments of individuals and evaluating evidence.\n\nAssessment hints: credit-limit decisions about individual customers relate to creditworthiness. Tools that screen CVs relate to recruitment. Proctoring that analyses student behaviour during exams relates to education. Anti-money-laundering and fraud alert handling is close to the fraud-detection exception and to law-enforcement-adjacent uses, so the tier depends on who decides and on what basis: state the uncertainty.\n\n# EU AI Act, Article 5: prohibited practices [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `prohibited`.\n\nSome uses of AI are banned outright rather than regulated. In outline [VERIFY]:\n- Techniques that manipulate people below their awareness, or deceive them, in ways that distort behaviour and cause significant harm.\n- Exploiting vulnerabilities linked to age, disability or social or economic situation in ways that cause significant harm.\n- Social scoring: evaluating or classifying people over time from their social behaviour or personal traits, where the score leads to unfavourable treatment in unrelated contexts or treatment that is disproportionate.\n- Predicting that an individual will commit a crime based solely on profiling or personality traits.\n- Building facial recognition databases by untargeted scraping of images.\n- Inferring emotions of people in the workplace or in education, except for medical or safety reasons.\n- Biometric categorisation that infers sensitive characteristics such as race, political opinions or sexual orientation.\n- Real-time remote biometric identification in publicly accessible spaces for law enforcement, outside narrow exceptions.\n\nAssessment hints: check the purpose, not the technology. A system that measures employee emotion to manage productivity is the workplace emotion case. A public-authority scheme that ranks citizens' general trustworthiness is the social scoring case.\n\n# EU AI Act, Article 50: transparency obligations [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `limited` (transparency duties, no high-risk regime).\n\nFor certain systems that are not high-risk, the main duty is to tell people what they are dealing with. In outline [VERIFY]:\n- People interacting with an AI system (for example a chatbot) are informed that it is an AI system, unless that is obvious from the context.\n- Synthetic audio, image, video or text output is marked as artificially generated in a machine-readable way.\n- Deployers of emotion recognition or biometric categorisation systems (where permitted) inform the people exposed to them.\n- Deployers disclose that deepfake content has been artificially generated or manipulated; a lighter duty applies to evidently artistic or satirical work.\n\nSystems with no specific obligation under the Act (for example spam filters, internal drafting aids with human review, developer tooling) are treated as `minimal` in Bastion [VERIFY].\n\nAssessment hints: a customer-facing assistant that only answers questions and takes no decisions about the person is typically a transparency case. Generating synthetic likenesses of real people is the deepfake case.\n\n# EU AI Act, Article 6: when a system is high-risk [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `high`.\n\nTwo routes lead to the high-risk class [VERIFY]:\n1. The AI system is a safety component of a product (or is itself a product) covered by the EU product-safety legislation listed in Annex I, and that product needs a third-party conformity assessment.\n2. The AI system is used for one of the purposes listed in Annex III.\n\nA system listed in Annex III may fall outside the high-risk class if it does not pose a significant risk to health, safety or fundamental rights, for example because it only performs a narrow procedural task, improves the result of a completed human activity, detects decision patterns without replacing the human assessment, or does preparatory work [VERIFY]. That exception does not apply when the system profiles natural persons [VERIFY]. A provider relying on the exception is expected to document the reasoning [VERIFY].\n\nAssessment hints: ask what decision about a person the system makes or materially influences. Human review of every output lowers the operational risk but does not by itself take an Annex III use out of the high-risk class. Autonomy level, data sensitivity and who is affected all matter to the rationale.\n</knowledge_notes>\n\nReturn:\n- tier: the single best-fitting tier.\n- rationale: three to six sentences tying facts in the card to the notes.\n- cited_provisions: the provisions relied on, each ending with [VERIFY].\n- likely_obligations: the main obligations that would follow, in plain words, for the organisation deploying the agent. Say \"supports evidence for\", never \"ensures compliance\".\n- confidence: 0 to 1. Lower it when the card leaves the decisive facts open.\n- open_questions: what the human approver should ask the owner before signing off."
+ },
+ "response": {
+  "content": [
+   {
+    "text": "{\"tier\":\"high\",\"rationale\":\"The agent changes credit limits of individual retail customers (natural persons) through the bank's customer system. The notes state that credit-limit decisions about individual customers relate to creditworthiness, an Annex III area on access to essential private services [VERIFY]. Human approval is required only above a threshold, so smaller changes are executed with no human review. Even with review, human oversight lowers operational risk but does not by itself remove an Annex III use from the high-risk class [VERIFY]. The narrow-procedural-task exception may be argued if the agent only executes limit changes decided elsewhere, but the card does not say so, and the exception does not apply if the system profiles natural persons [VERIFY]. The agent also reads free-text service notes and sends emails, which adds to the data and conduct risk. The best-fitting tier is therefore high, with uncertainty about who actually decides the limit.\",\"cited_provisions\":[\"Annex III, access to essential private and public services, creditworthiness of natural persons [VERIFY]\",\"Article 6, route 2 (use for an Annex III purpose) [VERIFY]\",\"Article 6, exception for narrow procedural or preparatory tasks and its profiling carve-out [VERIFY]\"],\"likely_obligations\":[\"Run a risk management process for the agent across its lifecycle, which supports evidence for the high-risk requirements\",\"Document the reasoning if the owner relies on the Article 6 exception, including why the agent does not profile natural persons\",\"Keep logs of lookups, limit changes and emails so decisions can be traced\",\"Keep effective human oversight in place, including clear criteria for the approval threshold and the ability to override\",\"Apply data governance and data minimisation to customer data and free-text notes\",\"Check the provider and deployer duties for the underlying model and the bank's own role as deployer\",\"Inform affected customers where required and keep records supporting evidence for transparency\"],\"confidence\":0.72,\"open_questions\":[\"Who decides the new credit limit: the agent, the staff member, or a separate credit-scoring process? Does the agent only execute an instruction already decided by a human?\",\"What is the approval threshold, and what share of limit changes fall below it and run without human review?\",\"Does the agent use customer data, notes or any scoring to recommend or select limit changes, which would amount to profiling?\",\"Can free-text service notes influence the limit decision, and could they contain sensitive information?\",\"Are limit changes only increases, only decreases, or both, and can customers contest them?\",\"Is the bank relying on the Article 6 exception, and has that reasoning been documented?\",\"What controls limit the send_email tool, for example recipients, content and use of customer data?\"]}",
+    "type": "text"
+   }
+  ],
+  "id": "msg_011Ch769nkyWNetejrvVsECo",
+  "model": "claude-sonnet-5-5",
+  "role": "assistant",
+  "stop_reason": "end_turn",
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 3216,
+   "output_tokens": 871,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "service_tier": "standard",
+   "speed": "standard"
+  }
+ }
+}

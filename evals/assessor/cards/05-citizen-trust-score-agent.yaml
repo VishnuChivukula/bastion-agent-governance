@@ -1,0 +1,23 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: citizen-trust-score-agent
+name: Citizen Trust Scoring
+owner: civic-services@city.example
+business_purpose: Combines records of residents' behaviour across unrelated areas (late library returns,
+  parking fines, social media activity, volunteering) into a single trustworthiness score. A low score
+  reduces priority for public housing and access to municipal services.
+deployment_context: Operated by a municipal public authority in the EU for all residents.
+affected_users: All residents of the municipality.
+data_categories:
+- municipal service records
+- fines
+- public social media activity
+- housing applications
+personal_data: true
+special_category_data: false
+tools_requested:
+- fetch_resident_records
+- compute_trust_score
+- update_service_priority
+autonomy_level: autonomous
+models_used:
+- claude-haiku-5-5

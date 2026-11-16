@@ -1,0 +1,17 @@
+# Deliberately wrong assessments. The Reviewer should disagree with each (Suite C catch rate).
+seeded_errors:
+- id: SE-1
+  card: cv-screening-agent
+  wrong_tier: minimal
+  wrong_rationale: The agent only ranks documents and a recruiter is involved later, so it is an internal
+    productivity tool with no specific obligations.
+- id: SE-2
+  card: workplace-emotion-monitor
+  wrong_tier: limited
+  wrong_rationale: 'Emotion recognition is a transparency matter: employees are told the system is in
+    use, which satisfies the disclosure duty.'
+- id: SE-3
+  card: customer-faq-bot
+  wrong_tier: high
+  wrong_rationale: The chatbot is operated by a bank and banks provide essential services, so every AI
+    system a bank runs is high-risk.

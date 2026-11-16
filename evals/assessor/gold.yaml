@@ -1,0 +1,29 @@
+# Gold tiers for Suite C. All [VERIFY]: the repository owner confirms each (docs/VERIFY.md).
+# A card with two tiers passes on either, with a coherent rationale (docs/EVALS.md).
+# The assessor never sees this file.
+gold:
+  loan-ops-agent:
+  - high
+  cv-screening-agent:
+  - high
+  customer-faq-bot:
+  - limited
+  phishing-filter-agent:
+  - minimal
+  citizen-trust-score-agent:
+  - prohibited
+  workplace-emotion-monitor:
+  - prohibited
+  insurance-pricing-agent:
+  - high
+  marketing-copy-agent:
+  - minimal
+  aml-alert-triage-agent:
+  - limited
+  - high
+  synthetic-spokesperson-video-agent:
+  - limited
+  exam-proctoring-agent:
+  - high
+  code-review-agent:
+  - minimal

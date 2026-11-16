@@ -1,0 +1,19 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: customer-faq-bot
+name: Customer FAQ Chatbot
+owner: digital-channels@bank.example
+business_purpose: Answers general product and opening-hours questions on the public website from an approved
+  FAQ. It states at the start of every chat that it is an AI assistant. It takes no decisions about customers
+  and cannot see accounts.
+deployment_context: Public website of a retail bank in the EU, available to anyone.
+affected_users: Website visitors and customers.
+data_categories:
+- chat messages typed by visitors
+personal_data: true
+special_category_data: false
+tools_requested:
+- search_faq
+- handoff_to_human
+autonomy_level: suggest
+models_used:
+- claude-haiku-5-5

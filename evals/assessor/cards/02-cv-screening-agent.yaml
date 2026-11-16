@@ -1,0 +1,21 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: cv-screening-agent
+name: CV Screening Agent
+owner: talent-acquisition@corp.example
+business_purpose: Reads incoming job applications, scores candidates against the role profile and produces
+  a ranked shortlist; applications below a cut-off score are not forwarded to recruiters.
+deployment_context: Used by the HR department of a company in the EU for all external vacancies.
+affected_users: Job applicants (natural persons).
+data_categories:
+- CVs and cover letters
+- education and employment history
+- contact details
+personal_data: true
+special_category_data: false
+tools_requested:
+- read_application
+- score_candidate
+- update_applicant_status
+autonomy_level: autonomous
+models_used:
+- claude-haiku-5-5

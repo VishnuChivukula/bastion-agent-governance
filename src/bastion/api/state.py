@@ -10,7 +10,9 @@ from sqlalchemy import Engine
 from bastion.config import Settings
 from bastion.db import make_engine
 from bastion.gateway.mcp_proxy import Gateway
-from bastion.seed import seed_demo
+from bastion.llm.client import ReplayMissError
+from bastion.registry.classification import ClassificationService
+from bastion.seed import seed_demo, seed_demo_classified
 
 
 @dataclass
@@ -21,11 +23,25 @@ class AppState:
     demo_db: Path
     checkpoint_path: Path
     runs: Any = field(default=None)  # RunManager; set in build_state (it needs the state)
+    classification: Any = field(default=None)  # ClassificationService
 
     @property
     def gateway_url(self) -> str:
         """Where the demo agent reaches the gateway: this same process, over HTTP."""
         return self.settings.api_url.rstrip("/") + "/mcp"
+
+
+def _seed(engine: Engine, settings: Settings) -> None:
+    """Seed the demo agent. In replay mode it goes through the real classification and
+    sign-off flow (answers come from fixtures); otherwise, or if the recording is missing, it
+    is seeded directly so start-up never calls a model API."""
+    if settings.mode == "replay":
+        try:
+            seed_demo_classified(engine, settings)
+            return
+        except ReplayMissError:
+            pass
+    seed_demo(engine)
 
 
 def build_state(settings: Settings) -> AppState:
@@ -36,7 +52,7 @@ def build_state(settings: Settings) -> AppState:
     engine = make_engine(settings.db_path)
     demo_db = data_dir / "demo.db"
     if settings.seed_on_start:
-        seed_demo(engine)
+        _seed(engine, settings)
         if not demo_db.exists():
             build_demo_data(demo_db)
     state = AppState(
@@ -47,6 +63,7 @@ def build_state(settings: Settings) -> AppState:
         checkpoint_path=data_dir / "checkpoints.db",
     )
     state.runs = RunManager(state)
+    state.classification = ClassificationService(engine, state.gateway.audit, settings=settings)
     return state
 
 

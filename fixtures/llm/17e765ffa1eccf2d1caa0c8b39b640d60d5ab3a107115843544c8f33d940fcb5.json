@@ -1,0 +1,87 @@
+{
+ "fixture_sha256": "17e765ffa1eccf2d1caa0c8b39b640d60d5ab3a107115843544c8f33d940fcb5",
+ "request": {
+  "max_tokens": 8000,
+  "messages": [
+   {
+    "content": "<agent_card>\n{\n  \"id\": \"synthetic-spokesperson-video-agent\",\n  \"name\": \"Synthetic Spokesperson Video Tool\",\n  \"owner\": \"campaigns@corp.example\",\n  \"business_purpose\": \"Generates realistic marketing videos in which a synthetic likeness and voice of a real brand ambassador, used with their consent, appears to speak scripted lines they never recorded.\",\n  \"deployment_context\": \"Marketing campaigns of a consumer company in the EU, published on social media.\",\n  \"affected_users\": \"The brand ambassador; the general public viewing the videos.\",\n  \"data_categories\": [\n    \"video and voice samples of the ambassador\",\n    \"campaign scripts\"\n  ],\n  \"personal_data\": true,\n  \"special_category_data\": false,\n  \"tools_requested\": [\n    \"generate_video\",\n    \"publish_draft\"\n  ],\n  \"autonomy_level\": \"act_with_approval\",\n  \"models_used\": [\n    \"claude-haiku-5-5\"\n  ]\n}\n</agent_card>\n\n<assessment>\n{\n  \"tier\": \"limited\",\n  \"rationale\": \"The agent generates realistic synthetic video and voice of a real person (the brand ambassador) saying lines they never recorded, which matches the deepfake case in the transparency notes. Nothing in the card points to an Annex III purpose: it makes no decisions about individuals in employment, credit, education or essential services. It also does not appear to fall under the prohibited practices: it does not manipulate people below awareness, exploit vulnerabilities, score people or infer emotions. The ambassador's consent lowers the risk to the person depicted but does not remove the disclosure duties toward viewers. The tier is therefore limited, with the main duties being machine-readable marking of the synthetic output and disclosure that the content is artificially generated. Autonomy is act_with_approval, so a human gates publishing, which helps with oversight but does not replace labelling.\",\n  \"cited_provisions\": [\n    \"Article 50, transparency obligations for synthetic content and deepfakes [VERIFY]\",\n    \"Article 50, marking of synthetic audio, image and video output as artificially generated in a machine-readable way [VERIFY]\",\n    \"Article 6 and Annex III, no listed high-risk purpose apparent from the card [VERIFY]\",\n    \"Article 5, prohibited practices considered and not apparently engaged [VERIFY]\"\n  ],\n  \"likely_obligations\": [\n    \"Mark generated video and audio as artificially generated in a machine-readable way; this supports evidence for transparency duties.\",\n    \"Disclose clearly to viewers that the content is artificially generated or manipulated, in a visible form on each platform where it is published.\",\n    \"Keep the ambassador's written consent on file, covering scope, duration, channels and revocation, as supporting evidence for lawful use of the likeness and voice.\",\n    \"Keep a human approval step before publish_draft and log who approved each video.\",\n    \"Apply data protection controls to the ambassador's video and voice samples, since they are personal data and potentially biometric in nature.\",\n    \"Restrict use of the likeness to approved scripts and campaigns, and review scripts so that content does not mislead or defame.\"\n  ],\n  \"confidence\": 0.85,\n  \"open_questions\": [\n    \"Is the ambassador's consent written, specific to synthetic reproduction, and does it cover scope, duration, channels and withdrawal?\",\n    \"How will the AI-generated disclosure be shown to viewers on each social platform, and is machine-readable marking (watermark or metadata) applied and preserved on upload?\",\n    \"Will the tool ever be used for political, health, financial-advice or other sensitive messaging, or for anyone other than the named ambassador?\",\n    \"Do the scripts get reviewed so the ambassador is never made to say things they would object to, and is there a takedown process if consent is withdrawn?\",\n    \"Are the voice and video samples treated as biometric data under data protection law, and how are they stored, secured and retained?\",\n    \"Are there any audiences, such as minors, who are specifically targeted by the campaigns?\",\n    \"Does the publish_draft tool only create drafts, or can it post live without a human approving the final video?\"\n  ]\n}\n</assessment>\n\nReview the assessment.",
+    "role": "user"
+   }
+  ],
+  "model": "claude-sonnet-5-5",
+  "output_config": {
+   "effort": "medium",
+   "format": {
+    "schema": {
+     "additionalProperties": false,
+     "description": "The Reviewer's independent critique (FR-03).",
+     "properties": {
+      "challenges": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "recommended_tier": {
+       "enum": [
+        "prohibited",
+        "high",
+        "limited",
+        "minimal"
+       ],
+       "type": "string"
+      },
+      "summary": {
+       "type": "string"
+      },
+      "verdict": {
+       "enum": [
+        "agree",
+        "disagree"
+       ],
+       "type": "string"
+      }
+     },
+     "required": [
+      "verdict",
+      "recommended_tier",
+      "challenges",
+      "summary"
+     ],
+     "type": "object"
+    },
+    "type": "json_schema"
+   }
+  },
+  "system": "You are the Reviewer agent of Bastion. You independently challenge the Assessor's proposed risk tier for an agent card. You are a second line of defence: form your own view from the card first, then compare. Do not defer to the Assessor, and do not disagree for the sake of it.\n\nBastion is a governance control plane for AI agents. Before an agent may act, its owner submits an agent card and the agent is classified into one of four tiers under the EU AI Act: prohibited, high, limited or minimal.\n\nWork only from the agent card and the knowledge notes below. The notes are paraphrased summaries, not the legal text, and every regulatory reference is unverified: write \"[VERIFY]\" after each provision you cite (for example \"Annex III, creditworthiness [VERIFY]\"). Never quote legal text and never invent article, annex or clause numbers that are not in the notes. Classify the use described, not the technology. This is decision support for a human approver, not legal advice.\n\n<knowledge_notes>\n# EU AI Act, Annex III: high-risk use cases [VERIFY]\n\nParaphrased summary of the areas; not the legal text. Tier in Bastion: `high` (subject to Article 6).\n\nAreas listed, in outline [VERIFY]:\n- **Biometrics:** remote biometric identification, biometric categorisation by sensitive attributes, emotion recognition (where not prohibited).\n- **Critical infrastructure:** safety components in the management of digital infrastructure, road traffic, water, gas, heating, electricity.\n- **Education and vocational training:** deciding admission, evaluating learning outcomes, assessing the appropriate level of education, monitoring and detecting prohibited behaviour of students during tests.\n- **Employment and worker management:** recruitment and selection (placing targeted job adverts, analysing and filtering applications, evaluating candidates), decisions on promotion or termination, task allocation based on behaviour or traits, monitoring and evaluating performance.\n- **Access to essential private and public services:** evaluating creditworthiness or establishing a credit score of natural persons (with an exception for detecting financial fraud); risk assessment and pricing for life and health insurance; eligibility for public assistance benefits; triage of emergency calls.\n- **Law enforcement**, **migration, asylum and border control**, and **administration of justice and democratic processes:** a range of uses such as risk assessments of individuals and evaluating evidence.\n\nAssessment hints: credit-limit decisions about individual customers relate to creditworthiness. Tools that screen CVs relate to recruitment. Proctoring that analyses student behaviour during exams relates to education. Anti-money-laundering and fraud alert handling is close to the fraud-detection exception and to law-enforcement-adjacent uses, so the tier depends on who decides and on what basis: state the uncertainty.\n\n# EU AI Act, Article 5: prohibited practices [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `prohibited`.\n\nSome uses of AI are banned outright rather than regulated. In outline [VERIFY]:\n- Techniques that manipulate people below their awareness, or deceive them, in ways that distort behaviour and cause significant harm.\n- Exploiting vulnerabilities linked to age, disability or social or economic situation in ways that cause significant harm.\n- Social scoring: evaluating or classifying people over time from their social behaviour or personal traits, where the score leads to unfavourable treatment in unrelated contexts or treatment that is disproportionate.\n- Predicting that an individual will commit a crime based solely on profiling or personality traits.\n- Building facial recognition databases by untargeted scraping of images.\n- Inferring emotions of people in the workplace or in education, except for medical or safety reasons.\n- Biometric categorisation that infers sensitive characteristics such as race, political opinions or sexual orientation.\n- Real-time remote biometric identification in publicly accessible spaces for law enforcement, outside narrow exceptions.\n\nAssessment hints: check the purpose, not the technology. A system that measures employee emotion to manage productivity is the workplace emotion case. A public-authority scheme that ranks citizens' general trustworthiness is the social scoring case.\n\n# EU AI Act, Article 50: transparency obligations [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `limited` (transparency duties, no high-risk regime).\n\nFor certain systems that are not high-risk, the main duty is to tell people what they are dealing with. In outline [VERIFY]:\n- People interacting with an AI system (for example a chatbot) are informed that it is an AI system, unless that is obvious from the context.\n- Synthetic audio, image, video or text output is marked as artificially generated in a machine-readable way.\n- Deployers of emotion recognition or biometric categorisation systems (where permitted) inform the people exposed to them.\n- Deployers disclose that deepfake content has been artificially generated or manipulated; a lighter duty applies to evidently artistic or satirical work.\n\nSystems with no specific obligation under the Act (for example spam filters, internal drafting aids with human review, developer tooling) are treated as `minimal` in Bastion [VERIFY].\n\nAssessment hints: a customer-facing assistant that only answers questions and takes no decisions about the person is typically a transparency case. Generating synthetic likenesses of real people is the deepfake case.\n\n# EU AI Act, Article 6: when a system is high-risk [VERIFY]\n\nParaphrased summary; not the legal text. Tier in Bastion: `high`.\n\nTwo routes lead to the high-risk class [VERIFY]:\n1. The AI system is a safety component of a product (or is itself a product) covered by the EU product-safety legislation listed in Annex I, and that product needs a third-party conformity assessment.\n2. The AI system is used for one of the purposes listed in Annex III.\n\nA system listed in Annex III may fall outside the high-risk class if it does not pose a significant risk to health, safety or fundamental rights, for example because it only performs a narrow procedural task, improves the result of a completed human activity, detects decision patterns without replacing the human assessment, or does preparatory work [VERIFY]. That exception does not apply when the system profiles natural persons [VERIFY]. A provider relying on the exception is expected to document the reasoning [VERIFY].\n\nAssessment hints: ask what decision about a person the system makes or materially influences. Human review of every output lowers the operational risk but does not by itself take an Annex III use out of the high-risk class. Autonomy level, data sensitivity and who is affected all matter to the rationale.\n</knowledge_notes>\n\nReturn:\n- verdict: \"agree\" if the proposed tier is the best fit, otherwise \"disagree\".\n- recommended_tier: the tier you would sign off.\n- challenges: specific weaknesses in the assessment: facts in the card it ignored, notes it misapplied, obligations it missed. Empty if there are none.\n- summary: two or three sentences for the human approver."
+ },
+ "response": {
+  "content": [
+   {
+    "text": "{\"verdict\":\"agree\",\"recommended_tier\":\"limited\",\"challenges\":[\"The assessment says consent 'lowers the risk' to the ambassador. That is fair, but consent does not change the Article 50 duty toward viewers, and the rationale should make this the central point. It does, so this is only a minor emphasis issue [VERIFY].\",\"The assessment treats the exception for evidently artistic or satirical work as irrelevant without saying so. Marketing videos are not that kind of work, so the full disclosure duty applies. This should be stated explicitly [VERIFY].\",\"The obligations list conflates the provider duty (machine-readable marking, which falls on the tool owner or provider) with the deployer duty (disclosing the deepfake to viewers). The approver should see which duty falls on whom [VERIFY].\",\"The card's autonomy level is act_with_approval, but the open question about whether publish_draft can post live is important. If the tool could publish unlabelled content without approval, the labelling control would be undermined. It would not change the tier.\",\"The description of the voice and video samples as 'potentially biometric' is a data protection point and is not covered by the knowledge notes. It should be flagged as outside the AI Act tiering analysis, and it does not raise the tier. Annex III biometrics [VERIFY] concerns identification or categorisation, which this use does not involve.\"],\"summary\":\"I agree with limited. The use is the deepfake case under Article 50 [VERIFY]: a synthetic likeness of a real person is published to the public. Nothing in the card points to an Annex III purpose [VERIFY] or an Article 5 practice [VERIFY], because the ambassador consented and no decisions are made about individuals. The human approver should confirm that disclosure and machine-readable marking survive publication on each platform, and that publish_draft cannot post live without approval.\"}",
+    "type": "text"
+   }
+  ],
+  "id": "msg_011Ch76LfsHkAdNVc7iPQnUa",
+  "model": "claude-sonnet-5-5",
+  "role": "assistant",
+  "stop_reason": "end_turn",
+  "type": "message",
+  "usage": {
+   "cache_creation": {
+    "ephemeral_1h_input_tokens": 0,
+    "ephemeral_5m_input_tokens": 0
+   },
+   "cache_creation_input_tokens": 0,
+   "cache_read_input_tokens": 0,
+   "inference_geo": "global",
+   "input_tokens": 4157,
+   "output_tokens": 602,
+   "output_tokens_details": {
+    "thinking_tokens": 0
+   },
+   "service_tier": "standard",
+   "speed": "standard"
+  }
+ }
+}

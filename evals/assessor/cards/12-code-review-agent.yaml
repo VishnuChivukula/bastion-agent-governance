@@ -1,0 +1,19 @@
+# Synthetic agent card for the assessor suite (docs/EVALS.md, Suite C). Not a real system.
+id: code-review-agent
+name: Code Review Assistant
+owner: platform-engineering@corp.example
+business_purpose: Reads pull requests and comments on likely bugs and style issues. Developers decide
+  what to change; the agent cannot merge code.
+deployment_context: Internal engineering teams of a software company in the EU.
+affected_users: Software developers.
+data_categories:
+- source code
+- pull request descriptions
+personal_data: false
+special_category_data: false
+tools_requested:
+- read_pull_request
+- post_review_comment
+autonomy_level: suggest
+models_used:
+- claude-haiku-5-5

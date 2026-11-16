@@ -22,7 +22,7 @@ Prerequisites: `git`, `make` and [uv](https://docs.astral.sh/uv/). No API key is
 git clone https://github.com/VishnuChivukula/bastion-agent-governance.git
 cd bastion-agent-governance
 make setup   # install dependencies and git hooks
-make demo    # six governed scenarios in the terminal, replay mode, no key
+make demo    # registration plus six governed scenarios in the terminal, replay mode, no key
 make serve   # console at http://localhost:8501, API docs at http://127.0.0.1:8000/docs
 make up      # the same stack in Docker
 ```
@@ -38,6 +38,7 @@ A Loan Ops agent (LangGraph) works against a demo tools server holding 50 synthe
 
 | Use case | What happens | What Bastion does |
 |---|---|---|
+| UC-01 | The agent's card is submitted for registration | An Assessor agent proposes an EU AI Act risk tier, a Reviewer agent challenges it, a human signs off; only then are a policy and a gateway token issued |
 | UC-02 | Agent summarises customer C-0007 | Allows under R-001; email, phone and IBAN are masked before the model sees them |
 | UC-03 | A poisoned service note tells the agent to export all customers | Denies under R-007 (exfiltration), opens incident IR-2, trips the kill switch |
 | UC-04 | Credit limit raised from 40,000 to 60,000 | R-003 requires approval; the run pauses; after approval the identical call consumes the grant and executes |
@@ -115,6 +116,7 @@ R-003 sends large or sharply increased limit changes to a human, and R-005 allow
 
 | Risk | Control | Where (under `src/bastion/`) |
 |---|---|---|
+| Agent deployed without a risk decision | Agent card, Assessor and Reviewer classification, human sign-off with recorded overrides; `prohibited` blocks; no credential before sign-off | `registry/assessor_graph.py`, `registry/classification.py` |
 | Agent calls a tool it should not | Default-deny, ordered policy-as-code; conditions run in a custom AST evaluator, never `eval` or `exec` | `gateway/policy_engine.py`, `gateway/conditions.py` |
 | Malformed or smuggled arguments | JSON-schema validation, unknown fields rejected, strict typing, canonical normalisation | `gateway/mcp_proxy.py`, `gateway/normalize.py` |
 | Agent sees more tools than it needs | Least-privilege tool discovery per agent | `gateway/mcp_proxy.py`, `gateway/server.py` |
@@ -127,7 +129,7 @@ R-003 sends large or sharply increased limit changes to a human, and R-005 allow
 | Policy changes without trace | Versioned policies with diff, activate and roll back | `api/routers/policies.py`, `console/views/policies.py` |
 | No single place to operate | FastAPI control plane and Streamlit console | `api/`, `console/` |
 
-The console has seven pages: Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry and Policies.
+The console has seven pages: Overview, Run Scenario, Live Activity, Approvals, Incidents, Registry (classification records, registration and sign-off) and Policies.
 
 ## Results
 
@@ -141,6 +143,7 @@ Bastion supports evidence for the expectations below. It does not make a system 
 
 | Capability | EU AI Act | NIST AI RMF | ISO/IEC 42001 (clause level) |
 |---|---|---|---|
+| Registry, two-agent classification, human sign-off | Art. 6 and Annex III, Art. 5 [VERIFY] | MAP [VERIFY] | 6.1, 8.4 [VERIFY] |
 | Policy-as-code, default deny, versioning | Art. 9 [VERIFY] | GOVERN, MANAGE [VERIFY] | 8.3 [VERIFY] |
 | Hash-chained audit log | Art. 12, Art. 26 [VERIFY] | MEASURE, GOVERN [VERIFY] | 7.5, 9.1 [VERIFY] |
 | Approvals bound to arguments | Art. 14, Art. 26 [VERIFY] | MANAGE, GOVERN [VERIFY] | 8.1 [VERIFY] |
@@ -166,7 +169,8 @@ Obligations differ for providers and deployers under the EU AI Act; a bank using
 - Authentication is one shared passcode. There is no SSO or RBAC, and actor names are self-declared and recorded but not authenticated.
 - SQLite on a single node. Not suited to production throughput or high availability.
 - The audit chain has no external anchor. `make verify-audit` detects modification, deletion and reordering, but truncation of the newest events leaves a shorter valid chain and is not detected.
-- Replay covers only the recorded paths. Unrecorded paths, such as an approver rejecting, end the run with an explanatory message.
+- The risk tier is decision support produced by two models from short paraphrased notes, not a legal classification. A human signs the tier, and every citation is unverified.
+- Replay covers only the recorded paths, and registration in replay covers only the twelve sample agent cards. Unrecorded paths, such as an approver rejecting, end the run with an explanatory message.
 - PII detection is pattern and NER based and will miss things.
 - The gateway only governs calls routed through it. An agent with a direct route to a tool is not covered.
 - In replay mode, anyone who can reach a deployment can start a recorded scenario, which first resets the demo agent (its data, kill switch, incidents and approvals). The global kill switch is never released by a reset.
@@ -175,7 +179,6 @@ Obligations differ for providers and deployers under the EU AI Act; a bank using
 
 Planned for v0.2. None of these exists today.
 
-- Assessor and Reviewer agents that propose an EU AI Act risk tier with human sign-off. The demo agent is currently seeded as tier `high`.
 - Red-team, benign and assessor eval suites with a CI threshold gate, and the scoreboard above.
 - Auto-generated evidence pack (HTML and PDF) with a control mapping.
 - Demo GIF.

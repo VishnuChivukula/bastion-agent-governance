@@ -9,7 +9,7 @@ from fastapi import FastAPI
 
 from bastion import DISCLAIMER, __version__
 from bastion.api.auth import State
-from bastion.api.routers import agents, audit, evidence, oversight, policies, runs
+from bastion.api.routers import agents, audit, evidence, oversight, policies, registry, runs
 from bastion.api.schemas import Meta
 from bastion.api.state import build_state
 from bastion.config import Settings, get_settings
@@ -63,7 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             demo_policy_is_seed=_seed_policy_in_force(state),
         )
 
-    for module in (agents, policies, oversight, runs, audit, evidence):
+    for module in (agents, registry, policies, oversight, runs, audit, evidence):
         app.include_router(module.router)
     return app
 
