@@ -340,3 +340,35 @@ async def test_kill_switch_blocks_model_calls_too(harness, tmp_path):
     with pytest.raises(KillSwitchActive):
         client.create(model="claude-haiku-5-5", messages=[{"role": "user", "content": "hi"}])
     assert transport.calls == 0
+
+
+def test_invented_run_ids_do_not_reset_the_model_token_budget(harness):
+    """The token cap counts per Bastion-issued run; made-up run ids share one bucket."""
+    from bastion.llm.client import CallRecord, Usage
+    from bastion.llm.governance import BudgetExceeded, GovernanceHook
+
+    hook = GovernanceHook(harness.gateway.engine, harness.gateway.audit)
+
+    def spend(run_id: str | None) -> None:
+        hook.after_call(
+            CallRecord(
+                agent_id=harness.agent_id,
+                run_id=run_id,
+                model="claude-haiku-5-5",
+                mode="live",
+                usage=Usage(input_tokens=120_000, output_tokens=0),
+                cost_usd=0.0,
+                replayed=False,
+                latency_ms=1.0,
+                stop_reason="end_turn",
+                fixture_key="k",
+            )  # fmt: skip
+        )
+
+    spend("made-up-1")
+    spend("made-up-2")  # 240,000 tokens in the shared bucket; the cap is 200,000
+    with pytest.raises(BudgetExceeded):
+        hook.before_call(harness.agent_id, "made-up-3", "claude-haiku-5-5")
+    with pytest.raises(BudgetExceeded):
+        hook.before_call(harness.agent_id, None, "claude-haiku-5-5")
+    hook.before_call(harness.agent_id, harness.run_id, "claude-haiku-5-5")  # a real run: fine

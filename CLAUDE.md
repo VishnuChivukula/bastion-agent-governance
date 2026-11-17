@@ -40,9 +40,10 @@ Product name: **Bastion**. Repo name: **`bastion-agent-governance`**, which avoi
 - If context gets long: write the exact next step into PROGRESS, commit, push, and tell Vishnu to run `/clear` and paste `prompts/RESUME.md`.
 - **Ask Vishnu only for:** API key presence, GitHub auth, the Railway URL, licence or name changes, and VERIFY review. Decide everything else yourself and log it under PROGRESS → Decisions.
 - After each slice, print a 3-line status: what's done, what's next, and any human action needed.
+- **Design docs stay current.** Every slice that changes behaviour updates the affected sections of `docs/design/` (HLD, LLD, AGENT_ARCHITECTURE, DATA_MODEL, API, SECURITY) and the rows it touches in `docs/design/TRACEABILITY.md`, adds or removes rows in `docs/design/DIVERGENCES.md`, and rebuilds the pack with `make design-pdf`. Design docs describe the code as built, not the plan.
 
 ## Commands (the Makefile is the interface)
-`make setup` · `make check` (ruff + pytest) · `make demo` (replay, no key) · `make record` (needs key) · `make eval` · `make evidence AGENT=loan-ops-agent` · `make verify-audit` · `make gif` · `make serve` (API + console locally) · `make up` (docker compose)
+`make setup` · `make check` (ruff + pytest) · `make demo` (replay, no key) · `make record` (needs key) · `make eval` · `make evidence AGENT=loan-ops-agent` · `make verify-audit` · `make gif` · `make serve` (API + console locally) · `make up` (docker compose) · `make design-pdf`
 
 ## Conventions
 - Python 3.12, uv, type hints, ruff (format + lint), pytest, Pydantic v2 at every boundary, pydantic-settings for config.

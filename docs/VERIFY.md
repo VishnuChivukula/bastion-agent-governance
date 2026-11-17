@@ -8,7 +8,7 @@ Bastion supports evidence for obligations; it does not make a system compliant. 
 
 1. Work through the table below against the primary sources. Rows 1–29 are the base claims; rows 30 and above say where those claims are repeated (README, knowledge notes, evidence pack, showcase docs), so correcting a base row means correcting its repeats.
 2. Flip `unverified` to `verified`, or correct the claim in the named file and note the change here.
-3. Model-written citations (row 36) cannot be verified once and for all: they are regenerated whenever fixtures are re-recorded. The control is that each must carry `[VERIFY]` (checked by the assessor suite) and that a human signs the tier.
+3. Model-written citations (row 36) cannot be verified once and for all: they are regenerated whenever fixtures are re-recorded. The control is that each must carry `[VERIFY]` (enforced by a validator on `Assessment.cited_provisions`) and that a human signs the tier.
 4. The price table (P1) is the only non-regulatory item.
 
 ## Regulatory references
@@ -52,8 +52,9 @@ Bastion supports evidence for obligations; it does not make a system compliant. 
 | 35 | evals/assessor/gold.yaml | EU AI Act Art. 5, Art. 6, Annex III, Art. 50 | Gold tier per synthetic card (same as row 29, now in the repo as data) | unverified |
 | 36 | fixtures/llm/*.json, registry classification records | Provisions cited by the Assessor and Reviewer agents | Model-written citations; each is required to carry `[VERIFY]` and is decision support only | unverified |
 | 37 | src/bastion/evidence/generator.py (`MAPPING`), src/bastion/evidence/templates/pack.html.j2, docs/samples/evidence-pack-loan-ops-agent.{html,pdf} | The capability → framework mapping (rows 1–27) and the provider / deployer note (row 15) | Printed in every evidence pack, each cell marked `[VERIFY]`; rows appear only where the pack holds evidence | unverified |
-| 38 | docs/THREAT_MODEL.md | EU AI Act Art. 9, 12, 14, 15, 26; NIST AI RMF functions; NIST AI 600-1; ISO/IEC 42001 clauses 8.1, 9.1; DORA | Relates the threats and controls to robustness, oversight and record-keeping expectations (repeats rows 3–6, 9, 16, 17, 21, 25, 27) | unverified |
+| 38 | docs/design/SECURITY.md (the threat model, moved from docs/THREAT_MODEL.md) | EU AI Act Art. 9, 12, 14, 15, 26; NIST AI RMF functions; NIST AI 600-1; ISO/IEC 42001 clauses 8.1, 9.1; DORA | Relates the threats and controls to robustness, oversight and record-keeping expectations (repeats rows 3–6, 9, 16, 17, 21, 25, 27) | unverified |
 | 39 | docs/SHOWCASE.md, docs/DEMO_SCRIPT.md | EU AI Act Art. 9, 12, 14, 15; ISO/IEC 42001 clause 8.1; DORA ICT incident management; provider vs deployer; the three frameworks by name | Talking points and narrative for bank audiences (repeats rows 3, 4, 6, 9, 15, 21, 27) | unverified |
+| 40 | docs/design/HLD.md, AGENT_ARCHITECTURE.md, DATA_MODEL.md, TRACEABILITY.md, LLD.md, API.md, DIVERGENCES.md and the generated docs/design/Bastion-Design-Pack.pdf | EU AI Act Art. 5, 6, 9, 12, 14, 15, 26, 50 and Annex III; GDPR Art. 5(1)(c); NIST AI RMF functions; ISO/IEC 42001 at clause level; DORA; provider vs deployer | Design documentation repeating the base rows where a capability is related to an expectation, incl. retention notes in DATA_MODEL.md | unverified |
 
 No ISO/IEC 42001 Annex A control identifiers are cited anywhere in this repository; references are at clause level only.
 

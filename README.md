@@ -133,6 +133,21 @@ Rules are ordered, the first match wins, and a tool with no matching rule is den
 
 R-003 sends large or sharply increased limit changes to a human, and R-005 allows email only to the bank domain while holding any message that contains an IBAN or card number for approval. R-007 denies bulk export outright and tags it `exfiltration`, which the incident rule IR-2 turns into a high-severity incident and an automatic kill.
 
+## Architecture & Design
+
+The design documentation describes the code as built, with every claim tied to a module, a test or an eval scenario. One PDF with all of it: [`Bastion-Design-Pack.pdf`](docs/design/Bastion-Design-Pack.pdf) (`make design-pdf`).
+
+| Document | What it covers |
+|---|---|
+| [`HLD.md`](docs/design/HLD.md) | High-level design on the arc42 structure with C4 diagrams: context, containers, components, eight runtime sequences, deployment, cross-cutting concepts, quality scenarios with measured results, risks |
+| [`LLD.md`](docs/design/LLD.md) | Per module: interfaces, data structures and algorithms (policy evaluation order, the condition evaluator, argument normalisation and hashing, the grant lifecycle, the hash chain, budgets, locking) and the tests covering each |
+| [`AGENT_ARCHITECTURE.md`](docs/design/AGENT_ARCHITECTURE.md) | The Loan Ops agent, the Assessor and the Reviewer: graphs, state, prompts, structured outputs, failure modes, and why governance sits at the tool boundary and not in prompts |
+| [`DATA_MODEL.md`](docs/design/DATA_MODEL.md) | Entity-relationship diagram of every table, invariants and where each is enforced, retention notes |
+| [`API.md`](docs/design/API.md) | Endpoint catalogue with passcode guards, and the MCP gateway contract |
+| [`SECURITY.md`](docs/design/SECURITY.md) | STRIDE threat model, controls mapped to threats, red-team coverage per threat, residual risks |
+| [`TRACEABILITY.md`](docs/design/TRACEABILITY.md) | Requirement → modules → tests → eval scenarios → status |
+| [`DIVERGENCES.md`](docs/design/DIVERGENCES.md) | Every place the code differs from the original specification |
+
 ## Features mapped to the problem
 
 | Risk | Control | Where (under `src/bastion/`) |
@@ -232,7 +247,6 @@ Not built. Candidates for a next version, in rough order of value:
 | [`docs/EVALS.md`](docs/EVALS.md) | Eval suites and CI thresholds |
 | [`docs/GOVERNANCE_MAPPING.md`](docs/GOVERNANCE_MAPPING.md) | Regulatory mapping and the VERIFY rule |
 | [`docs/SLICES.md`](docs/SLICES.md) | Build order |
-| [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) | STRIDE over the agent, gateway and tool path, with the red-team case for each threat |
 | [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) | A 3-minute and a 10-minute demo, with the questions you will get |
 | [`docs/SHOWCASE.md`](docs/SHOWCASE.md) | Talking points and a pre-sales narrative |
 | [`docs/VERIFY.md`](docs/VERIFY.md) | Every regulatory reference in the repo, awaiting human verification |

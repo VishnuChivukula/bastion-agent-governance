@@ -260,3 +260,12 @@ def test_sign_off_is_claimed_once(engine):
         svc.sign_off("test-agent", tier="prohibited", approver="b@bank.example")
     agent = svc.registry.get_agent("test-agent")
     assert agent.status == "active" and agent.tier == "limited"
+
+
+def test_a_citation_without_the_verify_marker_is_rejected(engine):
+    """FR-02: the model's citations must carry [VERIFY]; one without it fails validation."""
+    unmarked = {**assessment(), "cited_provisions": ["Annex III, creditworthiness"]}
+    svc = service(engine, unmarked)
+    with pytest.raises(AssessmentError, match="VERIFY"):
+        svc.register(card(), actor="owner@bank.example")
+    assert svc.registry.get_agent("test-agent").status == "draft"

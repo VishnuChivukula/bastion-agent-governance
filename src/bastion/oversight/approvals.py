@@ -1,7 +1,8 @@
 """Human approvals bound to exact arguments (ADR-002, FR-20).
 
-A pending approval is keyed by (agent_id, tool, args_hash). Decisions, single-use grants,
-expiry and revocation are added in slice S3.
+An approval is keyed by (agent_id, tool, args_hash). `ApprovalStore` creates pending
+approvals; `ApprovalService` adds decisions, single-use grants, expiry and revocation.
+A grant is an approval in status `approved`; using it moves it to `consumed`.
 """
 
 import hashlib

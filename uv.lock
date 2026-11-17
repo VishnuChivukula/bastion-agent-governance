@@ -121,6 +121,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "markdown-it-py" },
     { name = "pillow" },
     { name = "pre-commit" },
     { name = "pypdf" },
@@ -156,6 +157,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "markdown-it-py", specifier = ">=4.3.0" },
     { name = "pillow", specifier = ">=13.0.0" },
     { name = "pre-commit", specifier = ">=3.7" },
     { name = "pypdf", specifier = ">=7.1.0" },

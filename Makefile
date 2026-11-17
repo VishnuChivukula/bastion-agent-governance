@@ -3,7 +3,7 @@
 AGENT ?= loan-ops-agent
 export BASTION_MODE ?= replay
 
-.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke evidence-sample
+.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke evidence-sample design-pdf
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -50,6 +50,13 @@ serve: ## Run API + console locally (console on http://localhost:8501, API docs 
 
 up: ## Run in Docker (console on http://localhost:8501, API docs on http://localhost:8000/docs)
 	docker compose up --build
+
+DESIGN_DOCS = HLD LLD AGENT_ARCHITECTURE DATA_MODEL API SECURITY TRACEABILITY DIVERGENCES
+
+design-pdf: ## Build docs/design/Bastion-Design-Pack.pdf from the design documents (needs network for Mermaid)
+	@uv run python scripts/make_doc_pdf.py --title "Bastion Design Pack" \
+		--subtitle "Architecture and design of a runtime governance control plane for AI agents" \
+		--out docs/design/Bastion-Design-Pack.pdf $(addprefix docs/design/,$(addsuffix .md,$(DESIGN_DOCS)))
 
 smoke: ## Smoke-test a running instance (make serve or the container): health + UC-03 + audit
 	@uv run python scripts/smoke.py

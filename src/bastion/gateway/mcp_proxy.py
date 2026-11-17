@@ -1,8 +1,9 @@
 """The enforcement point: every tool call an agent makes goes through `Gateway.call_tool`.
 
-Order of checks (docs/ARCHITECTURE.md §6.1):
-  tool-name check → policy load → budget → argument validation → policy rules
-  → DLP scan of inputs → forward to the downstream tool → redact the output → audit.
+Order of checks (docs/design/LLD.md §2.1):
+  kill switch → tool-name check → policy load → budget → tool lookup → argument validation
+  → policy rules → DLP scan of inputs → grant check → forward to the downstream tool
+  → redact the output → audit → incident rules (after a denial).
 
 `Gateway` is transport-agnostic; `bastion.gateway.server` exposes it over MCP streamable HTTP.
 """

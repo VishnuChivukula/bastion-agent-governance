@@ -448,3 +448,14 @@ def test_unrecorded_card_in_replay_is_explained_and_can_be_retried(api):
     assert api.admin.post("/registry/agents", json=custom).status_code == 409  # still a draft
     bad = api.admin.post("/registry/agents", json={**custom, "id": "Not A Slug"})
     assert bad.status_code == 422
+
+
+def test_design_api_doc_lists_every_route(api):
+    """docs/design/API.md is the endpoint catalogue: it must not drift from the OpenAPI spec."""
+    doc = (REPO_ROOT / "docs" / "design" / "API.md").read_text(encoding="utf-8")
+    spec = api.anon.get("/openapi.json").json()["paths"]
+    for path, operations in spec.items():
+        for method in operations:
+            assert f"| {method.upper()} | `{path}` |" in doc, f"{method.upper()} {path}"
+    listed = [line for line in doc.splitlines() if line.startswith(("| GET |", "| POST |"))]
+    assert len(listed) == sum(len(ops) for ops in spec.values())

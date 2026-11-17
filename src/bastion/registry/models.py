@@ -45,7 +45,17 @@ class Assessment(BaseModel):
 
     tier: Tier
     rationale: str
-    cited_provisions: list[str]  # each carries [VERIFY]
+    cited_provisions: list[str]  # each carries [VERIFY]: enforced below
+
+    @field_validator("cited_provisions")
+    @classmethod
+    def _marked_unverified(cls, value: list[str]) -> list[str]:
+        """A model-written citation is never presented as verified (docs/GOVERNANCE_MAPPING.md)."""
+        missing = [item for item in value if "[VERIFY]" not in item]
+        if missing:
+            raise ValueError(f"cited provision without a [VERIFY] marker: {missing[0][:80]}")
+        return value
+
     likely_obligations: list[str]
     confidence: float = Field(ge=0, le=1)
     open_questions: list[str]

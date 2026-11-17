@@ -9,7 +9,7 @@ from bastion.db import session_scope
 from bastion.llm.client import CallRecord
 from bastion.models import Usage
 from bastion.oversight.killswitch import KillSwitchService
-from bastion.registry.service import PolicyStore
+from bastion.registry.service import PolicyStore, Registry
 
 
 class ModelCallBlocked(Exception):
@@ -36,6 +36,7 @@ class GovernanceHook:
         self.audit = audit or AuditLog(engine)
         self.policies = PolicyStore(engine, self.audit)
         self.killswitch = KillSwitchService(engine, self.audit)
+        self.registry = Registry(engine, self.audit)
 
     def session_tokens(self, agent_id: str, run_id: str) -> int:
         with session_scope(self.engine) as session:
@@ -62,7 +63,7 @@ class GovernanceHook:
             policy = self.policies.active(agent_id)
             budgets = policy.budgets if policy else None
             if budgets and budgets.max_tokens_per_session is not None:
-                used = self.session_tokens(agent_id, run_id or "unbound")
+                used = self.session_tokens(agent_id, self.registry.resolve_run(agent_id, run_id))
                 if used >= budgets.max_tokens_per_session:
                     blocked = BudgetExceeded(
                         f"budget_exceeded: max_tokens_per_session={budgets.max_tokens_per_session}"
@@ -90,7 +91,9 @@ class GovernanceHook:
             session.add(
                 Usage(
                     agent_id=record.agent_id,
-                    run_id=record.run_id or "unbound",
+                    # Same rule as the gateway: only a run Bastion issued for this agent is a
+                    # session of its own, so inventing run ids cannot reset the token budget.
+                    run_id=self.registry.resolve_run(record.agent_id, record.run_id),
                     kind="model",
                     tokens_in=record.usage.input_tokens,
                     tokens_out=record.usage.output_tokens,
