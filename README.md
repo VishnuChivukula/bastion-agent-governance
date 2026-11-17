@@ -148,6 +148,18 @@ The design documentation describes the code as built, with every claim tied to a
 | [`TRACEABILITY.md`](docs/design/TRACEABILITY.md) | Requirement → modules → tests → eval scenarios → status |
 | [`DIVERGENCES.md`](docs/design/DIVERGENCES.md) | Every place the code differs from the original specification |
 
+## Requirements
+
+Functional requirements organised around a catalogue of eight agentic AI use cases in banking. One use case is built (the loan operations agent); the others are requirements labelled Roadmap with their phase (P1 Claude Code / Agent SDK adapter, P2 KYC/AML desk, P3 AI FinOps) or "Roadmap (no phase assigned)". Every built requirement points to a test or an eval scenario.
+
+| Document | For | Markdown | Word | PDF |
+|---|---|---|---|---|
+| Requirements brief (one page) | Anyone with five minutes | [`.md`](docs/requirements/Bastion-Requirements-Brief.md) | [`.docx`](docs/requirements/exports/Bastion-Requirements-Brief.docx) | [`.pdf`](docs/requirements/exports/Bastion-Requirements-Brief.pdf) |
+| FRD, enterprise format | Risk, compliance, audit, business owners: document control, RACI with the three lines of defence, use-case specifications, MoSCoW requirements with Given/When/Then, control mapping, traceability matrix, UAT, sign-off page | [`.md`](docs/requirements/FRD-Enterprise.md) | [`.docx`](docs/requirements/exports/FRD-Enterprise.docx) | [`.pdf`](docs/requirements/exports/FRD-Enterprise.pdf) |
+| FRD, AI-native format | Architects and engineering leads: agent cards, MCP tool contracts, policy-as-code, evals as acceptance criteria, staged autonomy, atomic requirement ids a coding agent can implement | [`.md`](docs/requirements/FRD-AI-Native.md) | [`.docx`](docs/requirements/exports/FRD-AI-Native.docx) | [`.pdf`](docs/requirements/exports/FRD-AI-Native.pdf) |
+
+`make requirements-docs` rebuilds the exports. Risk tiers in these documents are indicative, and every regulatory reference is an unverified starting point marked `[VERIFY]`.
+
 ## Features mapped to the problem
 
 | Risk | Control | Where (under `src/bastion/`) |

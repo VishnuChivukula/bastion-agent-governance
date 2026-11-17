@@ -37,6 +37,27 @@ jobs:
       - name: README results table is up to date
         run: git diff --exit-code README.md
 
+  exports:
+    # The committed Word and PDF exports must open in an independent renderer.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: LibreOffice (headless) to convert the .docx files
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libreoffice-writer fonts-liberation fonts-dejavu-core
+      - name: Open every export; render the first and last page; check header and footer
+        run: uv run --with pymupdf python scripts/verify_exports.py export-check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: export-check
+          path: export-check/*.png
+
   gitleaks:
     runs-on: ubuntu-latest
     steps:

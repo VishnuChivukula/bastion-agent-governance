@@ -28,3 +28,7 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
+
+# office lock files and export checks
+~$*
+docs/requirements/exports/_verify/

@@ -3,7 +3,7 @@
 AGENT ?= loan-ops-agent
 export BASTION_MODE ?= replay
 
-.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke evidence-sample design-pdf
+.PHONY: help setup check preflight demo record eval evidence verify-audit gif serve up smoke evidence-sample design-pdf requirements-docs
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -57,6 +57,9 @@ design-pdf: ## Build docs/design/Bastion-Design-Pack.pdf from the design documen
 	@uv run python scripts/make_doc_pdf.py --title "Bastion Design Pack" \
 		--subtitle "Architecture and design of a runtime governance control plane for AI agents" \
 		--out docs/design/Bastion-Design-Pack.pdf $(addprefix docs/design/,$(addsuffix .md,$(DESIGN_DOCS)))
+
+requirements-docs: ## Export docs/requirements/*.md to Word and PDF in docs/requirements/exports/
+	@uv run python scripts/make_requirements_docs.py
 
 smoke: ## Smoke-test a running instance (make serve or the container): health + UC-03 + audit
 	@uv run python scripts/smoke.py
